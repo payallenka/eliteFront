@@ -1,0 +1,1 @@
+(Please copy Montserrat-Regular.ttf and Montserrat-Bold.ttf from your src/assets/Montserrat/static/ directory into this public/fonts/ directory. This step cannot be automated by me, but you must do it for the next step to work.)

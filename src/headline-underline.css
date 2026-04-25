@@ -1,0 +1,18 @@
+/* headline-underline.css */
+
+.headline-underline {
+  display: inline-block;
+  position: relative;
+  padding-bottom: 0.4em;
+}
+.headline-underline::after {
+  content: '';
+  display: block;
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 2.5em;
+  height: 3px;
+  background: linear-gradient(90deg, #6c47ff 60%, #1a0841 100%);
+  border-radius: 2px;
+}

@@ -1,0 +1,25 @@
+// test-brevo-email.js
+// Usage: node test-brevo-email.js
+
+const Brevo = require('@getbrevo/brevo');
+
+// Replace with your actual Brevo API key
+const API_KEY = 'YOUR_BREVO_API_KEY';
+
+const brevo = new Brevo.TransactionalEmailsApi();
+brevo.setApiKey(Brevo.TransactionalEmailsApiApiKeys.apiKey, API_KEY);
+
+const sendSmtpEmail = {
+  to: [{ email: 'recipient@example.com', name: 'Recipient Name' }], // Change to your test recipient
+  sender: { email: 'your@email.com', name: 'Your Name' }, // Change to your sender
+  subject: 'Test Email from Brevo',
+  htmlContent: '<h1>Hello from Brevo!</h1><p>This is a test email sent using the Brevo API.</p>'
+};
+
+brevo.sendTransacEmail(sendSmtpEmail)
+  .then(data => {
+    console.log('Email sent successfully:', data);
+  })
+  .catch(error => {
+    console.error('Error sending email:', error.response?.body || error);
+  });
