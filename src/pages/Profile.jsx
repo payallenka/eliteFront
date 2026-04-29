@@ -9,6 +9,7 @@ import { ReportPDF, getPDFFileName } from './ReportPDF';
 import { processApplicationFromMetadata } from '../lib/onboarding';
 import { documentExtractor } from '../utils/documentTextExtractor';
 import AdminSentDocuments from '../components/AdminSentDocuments';
+import { MdSchool, MdTranslate, MdAccountBalance } from 'react-icons/md';
 // Using inline function instead
 pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
 
@@ -46,18 +47,18 @@ function getCountryFlag(country) {
 
   function MetricCircle({ label, value }) {
     const lbl = (label || '').toLowerCase();
-    let iconPath, colorClass, borderClass;
+    let Icon, colorClass, borderClass;
 
     if (lbl === 'academics') {
-      iconPath = <path d="M22 12l-10-5-10 5 10 5 10-5z" />;
+      Icon = MdSchool;
       colorClass = "text-purple-600";
       borderClass = "border-purple-100 bg-purple-50";
     } else if (lbl === 'language') {
-      iconPath = <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />;
+      Icon = MdTranslate;
       colorClass = "text-blue-600";
       borderClass = "border-blue-100 bg-blue-50";
     } else {
-      iconPath = <rect x="2" y="7" width="20" height="14" rx="2" />;
+      Icon = MdAccountBalance;
       colorClass = "text-green-600";
       borderClass = "border-green-100 bg-green-50";
     }
@@ -65,9 +66,7 @@ function getCountryFlag(country) {
     return (
       <div className="flex flex-col items-center p-3 w-28">
         <div className={`w-14 h-14 rounded-full flex items-center justify-center border-2 mb-2 ${borderClass} ${colorClass}`}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            {iconPath}
-          </svg>
+          <Icon size={26} />
         </div>
         <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">{label}</span>
         <span className="text-sm font-bold text-gray-800">{value}</span>
@@ -1914,6 +1913,64 @@ function getCountryFlag(country) {
                               <div className="h-6 w-8 bg-purple-200 rounded flex items-center justify-center text-purple-700 font-bold text-xs">A+</div>
                             </div>
                           </div>
+                        </div>
+                      </div>
+
+                      {/* Visa Readiness */}
+                      <div className="flex items-center justify-between bg-indigo-50/60 p-4 rounded-xl border border-indigo-100">
+                        <div>
+                          <p className="text-sm font-semibold text-gray-700">Visa Readiness</p>
+                          <p className="text-xs text-gray-400 mt-0.5">Based on your profile completeness and eligibility</p>
+                        </div>
+                        <span className="px-3 py-1.5 rounded-lg text-sm font-bold bg-yellow-100 text-yellow-700">
+                          {applicationReport?.visaReadiness || applicationReport?.summary?.visaReadiness || 'Check Profile'}
+                        </span>
+                      </div>
+
+                      {/* Key Strengths & Recommendations */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="bg-white rounded-xl border border-gray-100 p-4">
+                          <h4 className="text-sm font-semibold text-gray-700 mb-3">Key Strengths</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {(() => {
+                              const academic = applicationReport?.summary?.strengths?.academic || (profileData?.gpa ? (parseFloat(profileData.gpa) >= 3.0 ? 'Strong' : (parseFloat(profileData.gpa) >= 2.0 ? 'Average' : 'Needs Improvement')) : null);
+                              const language = applicationReport?.summary?.strengths?.language || (profileData?.language_score ? (parseFloat(profileData.language_score) >= 7 ? 'Good' : (parseFloat(profileData.language_score) >= 5 ? 'Average' : 'Needs Improvement')) : null);
+                              const financial = applicationReport?.summary?.strengths?.financial || (profileData?.budget ? (parseFloat(profileData.budget) >= 15000 ? 'Good' : (parseFloat(profileData.budget) >= 8000 ? 'Average' : 'Needs Improvement')) : null);
+                              const strengths = [];
+                              if (academic === 'Strong') strengths.push('Strong Academics');
+                              if (language === 'Good') strengths.push('Good Language Score');
+                              if (financial === 'Good') strengths.push('Solid Budget');
+                              if (academic === 'Average') strengths.push('Average Academics');
+                              if (language === 'Average') strengths.push('Average Language');
+                              if (financial === 'Average') strengths.push('Moderate Budget');
+                              if (strengths.length === 0) strengths.push('Complete your profile');
+                              return strengths.map((s, i) => (
+                                <span key={i} className={`text-xs px-2 py-1 rounded-full border ${s.includes('Strong') || s.includes('Good') || s.includes('Solid') ? 'bg-green-50 text-green-700 border-green-100' : 'bg-amber-50 text-amber-700 border-amber-100'}`}>{s}</span>
+                              ));
+                            })()}
+                          </div>
+                        </div>
+                        <div className="bg-white rounded-xl border border-gray-100 p-4">
+                          <h4 className="text-sm font-semibold text-gray-700 mb-3">Next Steps</h4>
+                          <ul className="space-y-1.5">
+                            {(() => {
+                              const steps = [];
+                              if (!profileData?.gpa) steps.push('Add your GPA');
+                              if (!profileData?.language_score) steps.push('Add language test score');
+                              if (!profileData?.budget) steps.push('Add your budget');
+                              const academic = profileData?.gpa ? (parseFloat(profileData.gpa) >= 3.0 ? 'Strong' : 'improve') : null;
+                              const language = profileData?.language_score ? (parseFloat(profileData.language_score) >= 7 ? 'Good' : 'improve') : null;
+                              if (academic === 'improve') steps.push('Strengthen your academic record');
+                              if (language === 'improve') steps.push('Retake language test for higher score');
+                              steps.push('Prepare documents early');
+                              return steps.slice(0, 4).map((s, i) => (
+                                <li key={i} className="flex items-start gap-2 text-xs text-gray-600">
+                                  <span className="mt-0.5 w-4 h-4 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold flex-shrink-0">{i + 1}</span>
+                                  {s}
+                                </li>
+                              ));
+                            })()}
+                          </ul>
                         </div>
                       </div>
                     </>)}
