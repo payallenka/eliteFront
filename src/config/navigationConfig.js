@@ -1,7 +1,7 @@
 import {
   ClipboardList, UserCircle, BookOpen, Bot, Compass,
   Home, GraduationCap, Users, LayoutDashboard, CalendarDays,
-  Briefcase, LogOut, Zap,
+  Briefcase, LogOut, Zap, Building2,
 } from "lucide-react";
 
 // Unified navigation configuration for both desktop sidebar and mobile bottom nav
@@ -32,6 +32,7 @@ export const getNavigationItems = (isAdmin = false) => {
       { label: "Explore Programs", icon: Compass, path: "/explore-programs" },
       { label: "Housing", icon: Home, path: "/housing" },
       { label: "Scholarships", icon: GraduationCap, path: "/scholarships" },
+      { label: "Jobs", icon: Building2, path: "/jobs" },
     ],
     community: [
       { label: "Events", icon: CalendarDays, path: "/events" },
@@ -73,6 +74,7 @@ export const getMobileMoreItems = (isAdmin = false) => {
     { label: "Courses", icon: BookOpen, path: "/courses" },
     { label: "Housing", icon: Home, path: "/housing" },
     { label: "Scholarships", icon: GraduationCap, path: "/scholarships" },
+    { label: "Jobs", icon: Building2, path: "/jobs" },
     { label: "Events", icon: CalendarDays, path: "/events" },
     { label: "Careers", icon: Briefcase, path: "/careers" },
     { label: "Upgrade Plan", icon: Zap, path: "/upgrade-plan" },

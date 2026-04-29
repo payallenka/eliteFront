@@ -23,6 +23,7 @@ import NewApplicationForm from "./pages/NewApplicationForm";
 import AiAdvisor from "./pages/AiAdvisor";
 import ExplorePrograms from "./pages/ExplorePrograms";
 import ScholarshipsPage from "./pages/ScholarshipsPage";
+import JobsPage from "./pages/JobsPage";
 import "./headline-underline.css";
 import Housing from "./pages/Housing";
 
@@ -155,6 +156,7 @@ function AppContent() {
               <Route path="/upgrade-plan" element={<NewApplicationForm />} />
               <Route path="/housing" element={<Housing />} />
               <Route path="/scholarships" element={<ScholarshipsPage />} />
+              <Route path="/jobs" element={<JobsPage />} />
               {isAdmin && (
                 <>
                   <Route path="/admin-user-details/:userId" element={<AdminUserDetails />} />
