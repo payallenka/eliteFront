@@ -428,11 +428,26 @@ function MatchTab({ result, loading, error, profile, onRefresh }) {
   const field         = prof.field || "";
   const degreeLevel   = prof.degreeLevel || "";
 
+  const CA_PROVINCES = /\b(on|qc|bc|ab|mb|sk|ns|nb|pe|nl|nt|yt|nu)\b/i;
+  const SOURCE_COUNTRY = {
+    canada_job_bank: "Canada",
+    nhs_jobs: "United Kingdom",
+    uk_sponsor_register: "United Kingdom",
+  };
+
   // Generate a per-card match reason from profile data
   function matchReason(job) {
     const loc  = (job.location || "").toLowerCase();
     const text = `${job.title} ${job.description || ""} ${job.tags || ""}`.toLowerCase();
-    const matchedCountry = countries.find(c => loc.includes(c.toLowerCase()));
+    const src  = job.source || "";
+
+    const matchedCountry = countries.find(c => {
+      const cl = c.toLowerCase();
+      if (loc.includes(cl)) return true;
+      if (cl === "canada" && CA_PROVINCES.test(loc)) return true;
+      if (SOURCE_COUNTRY[src]?.toLowerCase() === cl) return true;
+      return false;
+    });
     if (matchedCountry) return `Located in ${matchedCountry}, one of your target countries`;
     if (field && text.includes(field.toLowerCase().split(" ")[0]))
       return `Relevant to your field of interest: ${field}`;
