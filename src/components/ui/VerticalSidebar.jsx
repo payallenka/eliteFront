@@ -4,7 +4,7 @@ import { supabase } from "../../supabaseClient";
 import {
   ClipboardList, UserCircle, BookOpen, Bot, Compass,
   Home, GraduationCap, Users, LayoutDashboard, CalendarDays,
-  Briefcase, LogOut, Zap, Sparkles,
+  Briefcase, LogOut, Zap, Sparkles, Building2,
 } from "lucide-react";
 
 const NavItem = ({ icon: Icon, label, collapsed, active, onClick }) => (
@@ -77,6 +77,7 @@ export default function VerticalSidebar({ isAdmin: isAdminProp }) {
     { icon: Compass,       label: "Explore Programs",    path: "/explore-programs" },
     { icon: Home,          label: "Housing",             path: "/housing" },
     { icon: GraduationCap, label: "Scholarships",        path: "/scholarships" },
+    { icon: Building2,     label: "Jobs",                path: "/jobs" },
   ];
 
   const adminNav = [
