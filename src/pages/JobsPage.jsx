@@ -122,94 +122,94 @@ function JobCard({ job, onClick }) {
 // ─── Job Detail Modal ─────────────────────────────────────────────────────────
 function JobModal({ job, onClose }) {
   if (!job) return null;
-  const meta   = SOURCE_META[job.source] || { label: job.source, bg: "bg-gray-50", text: "text-gray-600" };
-  const salary = formatSalary(job.salary_min, job.salary_max, job.currency);
+  const meta     = SOURCE_META[job.source] || { label: job.source, bg: "bg-gray-50", text: "text-gray-600", dot: "bg-gray-300" };
+  const salary   = formatSalary(job.salary_min, job.salary_max, job.currency);
   const initials = (job.company || "?").slice(0, 2).toUpperCase();
+  const isVisaSource = ["uk_sponsor_register", "nhs_jobs", "canada_job_bank"].includes(job.source);
   let tags = [];
   try { tags = JSON.parse(job.tags || "[]"); } catch { tags = []; }
 
+  const rows = [
+    salary          && { icon: "💷", label: "SALARY",   value: salary },
+    job.location    && { icon: "📍", label: "LOCATION", value: job.location },
+    job.contract_type && { icon: "📋", label: "CONTRACT", value: job.contract_type.split(",")[0] },
+    isVisaSource    && { icon: "✅", label: "VISA",     value: "Sponsorship / Work Permit Available" },
+    job.posted_at   && { icon: "📅", label: "POSTED",   value: postedDate(job.posted_at) },
+  ].filter(Boolean);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col" onClick={e => e.stopPropagation()}>
-        {/* Sticky header */}
-        <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-start justify-between gap-4 rounded-t-2xl z-10">
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            {job.logo_url ? (
-              <img src={job.logo_url} alt="" className="w-10 h-10 rounded-xl object-contain border border-gray-100" />
-            ) : (
-              <div className="w-10 h-10 rounded-xl bg-[#ede9ff] flex items-center justify-center text-[#6c47ff] font-bold text-xs flex-shrink-0">
-                {initials}
-              </div>
-            )}
-            <div className="min-w-0">
-              <h2 className="font-bold text-[#1a0841] text-base leading-snug">{job.title}</h2>
-              {job.company && <p className="text-sm text-purple-600 font-medium mt-0.5">{job.company}</p>}
-            </div>
-          </div>
-          <button onClick={onClose} className="shrink-0 p-1.5 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
-            <MdClose size={20} />
-          </button>
-        </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
 
-        {/* Body */}
-        <div className="px-6 py-5 flex flex-col gap-5">
-          {/* Badges */}
-          <div className="flex flex-wrap gap-2">
-            <span className={`inline-flex items-center gap-1 text-xs rounded-full px-3 py-1 font-medium ${meta.bg} ${meta.text}`}>
+        {/* Dark header */}
+        <div className="bg-[#1a0841] px-6 pt-6 pb-5">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              {job.logo_url ? (
+                <img src={job.logo_url} alt="" className="w-11 h-11 rounded-xl object-contain bg-white/10 flex-shrink-0" onError={e => { e.target.style.display = "none"; }} />
+              ) : (
+                <div className="w-11 h-11 rounded-xl bg-white/15 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                  {initials}
+                </div>
+              )}
+              <div className="min-w-0">
+                <h2 className="font-bold text-white text-sm leading-snug line-clamp-2">{job.title}</h2>
+                {job.company && <p className="text-purple-300 text-xs mt-0.5 truncate">{job.company}</p>}
+              </div>
+            </div>
+            <button onClick={onClose} className="shrink-0 p-1 rounded-lg text-white/50 hover:text-white transition-colors mt-0.5">
+              <MdClose size={18} />
+            </button>
+          </div>
+
+          {/* Visa / source badge */}
+          {isVisaSource ? (
+            <div className="mt-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-green-400 text-green-900 uppercase tracking-wide">
+              ✅ Visa Sponsor Licensed
+            </div>
+          ) : (
+            <div className={`mt-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wide ${meta.bg} ${meta.text}`}>
               {meta.label}
-            </span>
-            {job.location && (
-              <span className="inline-flex items-center gap-1 text-xs bg-slate-50 text-slate-700 rounded-full px-3 py-1 font-medium">
-                <MdLocationOn size={12} /> {job.location}
-              </span>
-            )}
-            {job.contract_type && (
-              <span className="inline-flex items-center gap-1 text-xs bg-indigo-50 text-indigo-700 rounded-full px-3 py-1 font-medium">
-                <MdWork size={12} /> {job.contract_type.split(",")[0]}
-              </span>
-            )}
-            {salary && (
-              <span className="inline-flex items-center gap-1 text-xs bg-green-50 text-green-700 rounded-full px-3 py-1 font-medium">
-                <MdAttachMoney size={12} /> {salary}
-              </span>
-            )}
-          </div>
-
-          {/* Description */}
-          {job.description && (
-            <div>
-              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">About this role</h3>
-              <p className="text-sm text-gray-700 leading-relaxed">{stripHtml(job.description)}</p>
             </div>
           )}
-
-          {/* Tags */}
-          {tags.length > 0 && (
-            <div>
-              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Skills / Tags</h3>
-              <div className="flex flex-wrap gap-1.5">
-                {tags.map((t, i) => (
-                  <span key={i} className="text-xs bg-orange-50 text-orange-700 rounded-full px-2.5 py-0.5">{t}</span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Meta */}
-          <div className="text-xs text-gray-400">
-            {job.posted_at && <span>Posted: {postedDate(job.posted_at)}</span>}
-          </div>
         </div>
 
-        {/* Sticky footer */}
-        <div className="sticky bottom-0 bg-white border-t border-gray-100 px-6 py-4 rounded-b-2xl">
+        {/* Section label */}
+        <div className="px-6 pt-4 pb-2">
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Job Board (Visa Sponsored)</p>
+        </div>
+
+        {/* Key rows */}
+        <div className="px-6 flex flex-col gap-2.5 pb-4">
+          {rows.map(r => (
+            <div key={r.label} className="flex items-start gap-3">
+              <span className="text-base leading-none mt-0.5">{r.icon}</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">{r.label}</p>
+                <p className="text-sm font-semibold text-[#1a0841] leading-snug">{r.value}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Tags */}
+        {tags.length > 0 && (
+          <div className="px-6 pb-4 flex flex-wrap gap-1.5">
+            {tags.slice(0, 8).map((t, i) => (
+              <span key={i} className="text-[11px] font-semibold text-gray-600 bg-gray-100 rounded px-2 py-0.5">[ {t} ]</span>
+            ))}
+          </div>
+        )}
+
+        {/* CTA */}
+        <div className="px-6 pb-6">
           <a
             href={job.apply_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-sm hover:from-purple-700 hover:to-indigo-700 transition-all"
+            className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-[#1a0841] text-white font-bold text-sm hover:bg-[#2c1a4e] transition-all"
           >
-            Apply Now <MdOpenInNew size={16} />
+            Apply Now <MdOpenInNew size={15} />
           </a>
         </div>
       </div>

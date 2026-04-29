@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { MdSearch, MdFilterList, MdOpenInNew, MdSchool, MdAutoAwesome, MdCalendarToday, MdAttachMoney, MdClose, MdPublic, MdLabel, MdPeople } from "react-icons/md";
+import { MdSearch, MdFilterList, MdOpenInNew, MdSchool, MdAutoAwesome, MdCalendarToday, MdAttachMoney, MdClose, MdPublic } from "react-icons/md";
 import { supabase } from "../supabaseClient";
 
 const API = import.meta.env.VITE_SCHOLARSHIP_API_URL || "http://localhost:8000";
@@ -17,130 +17,99 @@ function formatDeadline(deadline) {
 function ScholarshipModal({ s, onClose }) {
   if (!s) return null;
 
-  const levels = Array.isArray(s.degree_levels) ? s.degree_levels : [];
-  const countries = Array.isArray(s.host_countries) ? s.host_countries : [];
-  const fields = Array.isArray(s.fields_of_study) ? s.fields_of_study : [];
-  const nationalities = Array.isArray(s.eligible_nationalities) ? s.eligible_nationalities : [];
-  const tags = Array.isArray(s.tags) ? s.tags : [];
-  const amount = s.amount || s.funding_type || null;
-  const applyUrl = s.source_url || s.url;
+  const levels       = Array.isArray(s.degree_levels) ? s.degree_levels : [];
+  const countries    = Array.isArray(s.host_countries) ? s.host_countries : [];
+  const nationalities= Array.isArray(s.eligible_nationalities) ? s.eligible_nationalities : [];
+  const tags         = Array.isArray(s.tags) ? s.tags : [];
+  const funding      = s.funding_type || s.amount || null;
+  const isFull       = /full(y|\s*fund)/i.test(funding || "");
+  const applyUrl     = s.source_url || s.url;
+  const initials     = (s.organization || s.title || "?").slice(0, 2).toUpperCase();
+
+  const rows = [
+    funding   && { icon: "💰", label: "VALUE",    value: String(funding).slice(0, 80) },
+    countries.length && { icon: "📍", label: "LOCATION", value: countries.join(", ") },
+    s.deadline && { icon: "📅", label: "DEADLINE", value: formatDeadline(s.deadline) },
+    nationalities.length && { icon: "🌍", label: "ELIGIBLE", value: nationalities.slice(0, 5).join(", ") + (nationalities.length > 5 ? ` +${nationalities.length - 5}` : "") },
+    levels.length && { icon: "🎓", label: "LEVEL",    value: levels.join(", ") },
+  ].filter(Boolean);
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col"
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-start justify-between gap-4 rounded-t-2xl z-10">
-          <div className="flex-1 min-w-0">
-            <h2 className="font-bold text-[#1a0841] text-base leading-snug">{s.title}</h2>
-            {s.organization && <p className="text-sm text-purple-600 font-medium mt-0.5">{s.organization}</p>}
-          </div>
-          <button onClick={onClose} className="shrink-0 p-1.5 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
-            <MdClose size={20} />
-          </button>
-        </div>
-
-        {/* Body */}
-        <div className="px-6 py-5 flex flex-col gap-5">
-          {/* Badges row */}
-          <div className="flex flex-wrap gap-2">
-            {levels.length > 0 && (
-              <span className="inline-flex items-center gap-1 text-xs bg-purple-50 text-purple-700 rounded-full px-3 py-1 font-medium">
-                <MdSchool size={13} /> {levels.join(", ")}
-              </span>
-            )}
-            <span className="inline-flex items-center gap-1 text-xs bg-indigo-50 text-indigo-700 rounded-full px-3 py-1 font-medium">
-              <MdCalendarToday size={13} /> {formatDeadline(s.deadline)}
-            </span>
-            {amount && (
-              <span className="inline-flex items-center gap-1 text-xs bg-green-50 text-green-700 rounded-full px-3 py-1 font-medium">
-                <MdAttachMoney size={13} /> {String(amount).slice(0, 60)}
-              </span>
-            )}
+        <div className="bg-[#1a0841] px-6 pt-6 pb-5">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-11 h-11 rounded-xl bg-white/15 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                {initials}
+              </div>
+              <div className="min-w-0">
+                <h2 className="font-bold text-white text-sm leading-snug line-clamp-2">{s.title}</h2>
+                {s.organization && <p className="text-purple-300 text-xs mt-0.5 truncate">{s.organization}</p>}
+              </div>
+            </div>
+            <button onClick={onClose} className="shrink-0 p-1 rounded-lg text-white/50 hover:text-white transition-colors mt-0.5">
+              <MdClose size={18} />
+            </button>
           </div>
 
-          {/* Description */}
-          {s.description && (
-            <div>
-              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">About</h3>
-              <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{s.description}</p>
+          {/* Funding badge */}
+          {funding && (
+            <div className={`mt-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wide ${isFull ? "bg-green-400 text-green-900" : "bg-purple-400/30 text-purple-100"}`}>
+              💰 {isFull ? "Fully Funded (Full Ride)" : String(funding).slice(0, 50)}
             </div>
           )}
-
-          {/* Details grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {countries.length > 0 && (
-              <div>
-                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5 flex items-center gap-1">
-                  <MdPublic size={13} /> Host Countries
-                </h3>
-                <div className="flex flex-wrap gap-1.5">
-                  {countries.map(c => (
-                    <span key={c} className="text-xs bg-gray-100 text-gray-700 rounded-full px-2.5 py-0.5">{c}</span>
-                  ))}
-                </div>
-              </div>
-            )}
-            {nationalities.length > 0 && (
-              <div>
-                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5 flex items-center gap-1">
-                  <MdPeople size={13} /> Eligible Nationalities
-                </h3>
-                <div className="flex flex-wrap gap-1.5">
-                  {nationalities.slice(0, 10).map(n => (
-                    <span key={n} className="text-xs bg-gray-100 text-gray-700 rounded-full px-2.5 py-0.5">{n}</span>
-                  ))}
-                  {nationalities.length > 10 && (
-                    <span className="text-xs text-gray-400">+{nationalities.length - 10} more</span>
-                  )}
-                </div>
-              </div>
-            )}
-            {fields.length > 0 && (
-              <div>
-                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Fields of Study</h3>
-                <div className="flex flex-wrap gap-1.5">
-                  {fields.map(f => (
-                    <span key={f} className="text-xs bg-blue-50 text-blue-700 rounded-full px-2.5 py-0.5">{f}</span>
-                  ))}
-                </div>
-              </div>
-            )}
-            {tags.length > 0 && (
-              <div>
-                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5 flex items-center gap-1">
-                  <MdLabel size={13} /> Tags
-                </h3>
-                <div className="flex flex-wrap gap-1.5">
-                  {tags.map(t => (
-                    <span key={t} className="text-xs bg-orange-50 text-orange-700 rounded-full px-2.5 py-0.5">{t}</span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Source */}
-          <div className="text-xs text-gray-400 flex items-center gap-1">
-            Source: <span className="uppercase tracking-wide">{s.source_site}</span>
-          </div>
         </div>
 
-        {/* Footer CTA */}
-        <div className="sticky bottom-0 bg-white border-t border-gray-100 px-6 py-4 rounded-b-2xl">
+        {/* Section label */}
+        <div className="px-6 pt-4 pb-2">
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Scholarship Finder</p>
+        </div>
+
+        {/* Key rows */}
+        <div className="px-6 flex flex-col gap-2.5 pb-4">
+          {rows.map(r => (
+            <div key={r.label} className="flex items-start gap-3">
+              <span className="text-base leading-none mt-0.5">{r.icon}</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">{r.label}</p>
+                <p className="text-sm font-semibold text-[#1a0841] leading-snug">{r.value}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Tags */}
+        {tags.length > 0 && (
+          <div className="px-6 pb-4 flex flex-wrap gap-1.5">
+            {tags.slice(0, 8).map(t => (
+              <span key={t} className="text-[11px] font-semibold text-gray-600 bg-gray-100 rounded px-2 py-0.5">[ {t} ]</span>
+            ))}
+          </div>
+        )}
+
+        {/* Source */}
+        <div className="px-6 pb-3">
+          <p className="text-[10px] text-gray-400 uppercase tracking-wide">Source: {s.source_site}</p>
+        </div>
+
+        {/* CTA */}
+        <div className="px-6 pb-6">
           {applyUrl ? (
             <a
               href={applyUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-sm hover:from-purple-700 hover:to-indigo-700 transition-all"
+              className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-[#1a0841] text-white font-bold text-sm hover:bg-[#2c1a4e] transition-all"
             >
-              Apply Now <MdOpenInNew size={16} />
+              Apply Now <MdOpenInNew size={15} />
             </a>
           ) : (
             <p className="text-center text-xs text-gray-400">No application link available</p>
