@@ -2,26 +2,26 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import { HiSparkles } from "react-icons/hi2";
-import { MdArrowForward, MdCheckCircle, MdAutoAwesome } from "react-icons/md";
+import { MdArrowForward, MdCheckCircle, MdAutoAwesome, MdFactCheck, MdChat, MdDashboard, MdLockOpen } from "react-icons/md";
 
 const FEATURES = [
   {
-    icon: "🎯",
+    Icon: MdFactCheck,
     title: "Eligibility Check",
     desc: "Know exactly where you stand for your dream universities — instantly.",
   },
   {
-    icon: "🤖",
+    Icon: MdChat,
     title: "AI Advisor",
     desc: "24/7 personalised chat guidance for every step of your application.",
   },
   {
-    icon: "📋",
+    Icon: MdDashboard,
     title: "Application Tracker",
     desc: "One dashboard to manage every deadline, document, and decision.",
   },
   {
-    icon: "🆓",
+    Icon: MdLockOpen,
     title: "100% Free to Start",
     desc: "No credit card. No strings. Get your full admissions report in 60 seconds.",
   },
@@ -107,7 +107,7 @@ function Login() {
           <div className="space-y-4">
             {FEATURES.map((f) => (
               <div key={f.title} className="flex items-start gap-3.5">
-                <span className="text-xl leading-none mt-0.5">{f.icon}</span>
+                <f.Icon size={20} className="text-brand-300 flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="text-sm font-semibold text-white leading-tight">{f.title}</p>
                   <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">{f.desc}</p>

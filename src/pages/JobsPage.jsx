@@ -244,9 +244,7 @@ function JobSkeleton() {
 }
 
 const CATEGORY_CHIPS = [
-  "Technology", "Healthcare", "Finance", "Marketing",
-  "Education", "Engineering", "Sales", "Nursing",
-  "Accounting", "Construction", "Legal", "Design",
+  "Sales", "Nursing", "Accounting", "Construction", "Legal", "Design",
 ];
 
 const EXPERIENCE_LEVELS = [

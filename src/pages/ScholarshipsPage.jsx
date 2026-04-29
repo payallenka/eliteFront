@@ -195,6 +195,7 @@ function BrowseTab() {
   const [degreeLevel, setDegreeLevel] = useState("");
   const [hostCountry, setHostCountry] = useState("");
   const [sourceSite, setSourceSite] = useState("");
+  const [africanOnly, setAfricanOnly] = useState(false);
   const [sites, setSites] = useState([]);
   const [offset, setOffset] = useState(0);
   const [selected, setSelected] = useState(null);
@@ -216,6 +217,7 @@ function BrowseTab() {
       if (degreeLevel) params.set("degree_level", degreeLevel);
       if (hostCountry) params.set("host_country", hostCountry);
       if (sourceSite) params.set("source_site", sourceSite);
+      if (africanOnly) params.set("eligible_nationality", "African");
 
       const res = await fetch(`${API}/api/scholarships?${params}`, {
         headers: { "ngrok-skip-browser-warning": "true" }
@@ -231,14 +233,14 @@ function BrowseTab() {
     } finally {
       setLoading(false);
     }
-  }, [search, degreeLevel, hostCountry, sourceSite, offset]);
+  }, [search, degreeLevel, hostCountry, sourceSite, africanOnly, offset]);
 
   useEffect(() => {
     setOffset(0);
     setScholarships([]);
     fetchScholarships(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, degreeLevel, hostCountry, sourceSite]);
+  }, [search, degreeLevel, hostCountry, sourceSite, africanOnly]);
 
   const handleLoadMore = () => {
     setOffset(scholarships.length);
@@ -289,6 +291,16 @@ function BrowseTab() {
             <option key={s.name} value={s.name.toLowerCase()}>{s.name} ({s.count.toLocaleString()})</option>
           ))}
         </select>
+      </div>
+
+      {/* Quick filter chips */}
+      <div className="flex flex-wrap gap-2">
+        <button
+          onClick={() => setAfricanOnly(v => !v)}
+          className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${africanOnly ? "bg-[#1a0841] text-white border-[#1a0841]" : "bg-white text-gray-600 border-gray-200 hover:border-purple-300 hover:text-purple-700"}`}
+        >
+          For Africans
+        </button>
       </div>
 
       {/* Count */}
