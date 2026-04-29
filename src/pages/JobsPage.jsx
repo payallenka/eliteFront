@@ -243,14 +243,10 @@ function JobSkeleton() {
   );
 }
 
-const CATEGORIES = [
-  { value: "", label: "All Categories" },
-  { value: "tech",        label: "Technology" },
-  { value: "healthcare",  label: "Healthcare" },
-  { value: "finance",     label: "Finance" },
-  { value: "marketing",   label: "Marketing" },
-  { value: "education",   label: "Education" },
-  { value: "engineering", label: "Engineering" },
+const CATEGORY_CHIPS = [
+  "Technology", "Healthcare", "Finance", "Marketing",
+  "Education", "Engineering", "Sales", "Nursing",
+  "Accounting", "Construction", "Legal", "Design",
 ];
 
 const EXPERIENCE_LEVELS = [
@@ -365,15 +361,17 @@ function BrowseTab() {
         )}
       </div>
 
-      {/* Row 2: category + experience + last 24h chip */}
+      {/* Row 2: category text input + experience + last 24h */}
       <div className="flex flex-wrap gap-2 items-center">
-        <select
-          value={category}
-          onChange={e => setCategory(e.target.value)}
-          className="px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 bg-white appearance-none cursor-pointer"
-        >
-          {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-        </select>
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Category (e.g. Nursing, Sales…)"
+            value={category}
+            onChange={e => setCategory(e.target.value)}
+            className="pl-3 pr-4 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 bg-white w-52"
+          />
+        </div>
 
         <select
           value={experience}
@@ -389,6 +387,19 @@ function BrowseTab() {
         >
           🕐 Last 24 hrs
         </button>
+      </div>
+
+      {/* Category quick-select chips */}
+      <div className="flex flex-wrap gap-1.5">
+        {CATEGORY_CHIPS.map(chip => (
+          <button
+            key={chip}
+            onClick={() => setCategory(prev => prev === chip ? "" : chip)}
+            className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all ${category === chip ? "bg-[#1a0841] text-white border-[#1a0841]" : "bg-white text-gray-600 border-gray-200 hover:border-purple-300 hover:text-purple-700"}`}
+          >
+            {chip}
+          </button>
+        ))}
       </div>
 
       {/* Count */}
