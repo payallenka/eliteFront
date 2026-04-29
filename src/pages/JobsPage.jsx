@@ -243,6 +243,24 @@ function JobSkeleton() {
   );
 }
 
+const CATEGORIES = [
+  { value: "", label: "All Categories" },
+  { value: "tech",        label: "Technology" },
+  { value: "healthcare",  label: "Healthcare" },
+  { value: "finance",     label: "Finance" },
+  { value: "marketing",   label: "Marketing" },
+  { value: "education",   label: "Education" },
+  { value: "engineering", label: "Engineering" },
+];
+
+const EXPERIENCE_LEVELS = [
+  { value: "",        label: "All Levels" },
+  { value: "entry",   label: "Entry Level" },
+  { value: "mid",     label: "Mid Level" },
+  { value: "senior",  label: "Senior" },
+  { value: "manager", label: "Manager / Lead" },
+];
+
 // ─── Browse All Tab ───────────────────────────────────────────────────────────
 function BrowseTab() {
   const [jobs, setJobs]           = useState([]);
@@ -252,6 +270,9 @@ function BrowseTab() {
   const [search, setSearch]       = useState("");
   const [sourceFilter, setSource] = useState("");
   const [locationFilter, setLoc]  = useState("");
+  const [category, setCategory]   = useState("");
+  const [experience, setExp]      = useState("");
+  const [last24h, setLast24h]     = useState(false);
   const [offset, setOffset]       = useState(0);
   const [selected, setSelected]   = useState(null);
 
@@ -266,9 +287,12 @@ function BrowseTab() {
     setError(null);
     try {
       const params = new URLSearchParams({ limit: LIMIT, offset: reset ? 0 : offset });
-      if (search)         params.set("search",        search);
-      if (sourceFilter)   params.set("source",        sourceFilter);
-      if (locationFilter) params.set("location",      locationFilter);
+      if (search)         params.set("search",       search);
+      if (sourceFilter)   params.set("source",       sourceFilter);
+      if (locationFilter) params.set("location",     locationFilter);
+      if (category)       params.set("category",     category);
+      if (experience)     params.set("experience",   experience);
+      if (last24h)        params.set("posted_hours", "24");
       const res = await fetch(`${API}/api/jobs?${params}`);
       if (!res.ok) throw new Error(`Server error: ${res.status}`);
       const data = await res.json();
@@ -280,21 +304,22 @@ function BrowseTab() {
     } finally {
       setLoading(false);
     }
-  }, [search, sourceFilter, locationFilter, offset]);
+  }, [search, sourceFilter, locationFilter, category, experience, last24h, offset]);
 
   useEffect(() => {
     setOffset(0);
     setJobs([]);
     fetchJobs(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, sourceFilter, locationFilter]);
+  }, [search, sourceFilter, locationFilter, category, experience, last24h]);
 
-  const hasFilters = search || sourceFilter || locationFilter;
+  const hasFilters = search || sourceFilter || locationFilter || category || experience || last24h;
+  const clearAll = () => { setSearch(""); setSource(""); setLoc(""); setCategory(""); setExp(""); setLast24h(false); };
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-4">
 
-      {/* Filters */}
+      {/* Row 1: search + source + location + clear */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <MdSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
@@ -332,12 +357,38 @@ function BrowseTab() {
 
         {hasFilters && (
           <button
-            onClick={() => { setSearch(""); setSource(""); setLoc(""); }}
+            onClick={clearAll}
             className="px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1.5 whitespace-nowrap"
           >
             <MdClose size={14} /> Clear
           </button>
         )}
+      </div>
+
+      {/* Row 2: category + experience + last 24h chip */}
+      <div className="flex flex-wrap gap-2 items-center">
+        <select
+          value={category}
+          onChange={e => setCategory(e.target.value)}
+          className="px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 bg-white appearance-none cursor-pointer"
+        >
+          {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+        </select>
+
+        <select
+          value={experience}
+          onChange={e => setExp(e.target.value)}
+          className="px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 bg-white appearance-none cursor-pointer"
+        >
+          {EXPERIENCE_LEVELS.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
+        </select>
+
+        <button
+          onClick={() => setLast24h(v => !v)}
+          className={`px-3 py-2 rounded-xl border text-sm font-semibold transition-all flex items-center gap-1.5 ${last24h ? "bg-purple-600 border-purple-600 text-white" : "border-gray-200 text-gray-600 bg-white hover:border-purple-300"}`}
+        >
+          🕐 Last 24 hrs
+        </button>
       </div>
 
       {/* Count */}
