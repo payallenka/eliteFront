@@ -34,11 +34,18 @@ export const useKaaboWidget = (config) => {
       initializeWidget();
     }
 
-    // Cleanup on unmount
+    // Cleanup on unmount — remove script, clear container, restore body styles the widget may have set
     return () => {
       if (widgetRef.current) {
         widgetRef.current.innerHTML = '';
       }
+      const existingScript = document.getElementById('kaabo-widget-script');
+      if (existingScript) existingScript.remove();
+      scriptLoadedRef.current = false;
+      // Restore body/html overflow in case the widget locked them
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.documentElement.style.overflow = '';
     };
   }, [config]);
 

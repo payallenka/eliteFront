@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 
 export default function ExplorePrograms() {
   useEffect(() => {
@@ -29,20 +29,19 @@ export default function ExplorePrograms() {
 
   return (
     <div
-      className="min-h-screen w-full bg-[#f7f7fa] transition-all duration-300 overflow-hidden"
+      className="min-h-screen w-full bg-[#f7f7fa] transition-all duration-300"
       style={{ fontFamily: 'Montserrat, Inter, Hedvig Letters Sans, sans-serif' }}
     >
-      <div className="ml-0 lg:ml-16 w-auto overflow-hidden transition-all duration-300 px-0 sm:px-4">
-        <div className="widget-responsive-container overflow-hidden w-full px-0 sm:px-4">
+      <div className="ml-0 lg:ml-16 w-auto transition-all duration-300 px-0 sm:px-4">
+        <div className="widget-responsive-container w-full px-0 sm:px-4">
           <div
             id="ams-widget-container"
             className="ams-widget-responsive"
-            style={{ 
-              minHeight: 900, 
+            style={{
+              minHeight: 900,
               background: '#f7f7fa',
               width: '100%',
               maxWidth: '100%',
-              height: '900px'
             }}
           />
         </div>

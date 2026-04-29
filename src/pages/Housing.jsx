@@ -1,14 +1,9 @@
-import React from 'react';
 import KaaboWidget from '../components/KaaboWidget';
-import VerticalSidebar from '../components/ui/VerticalSidebar';
-import MobileBottomNav from '../components/ui/MobileBottomNav';
 
 export default function Housing() {
   return (
-    <div className="min-h-screen w-full bg-[#f7f7fa] transition-all duration-300 overflow-hidden" style={{ fontFamily: 'Montserrat, Inter, Hedvig Letters Sans, sans-serif' }}>
-      {/* Debug border for sidebar visibility */}
-      <VerticalSidebar/>
-      <div className="ml-0 lg:ml-16 w-auto overflow-hidden transition-all duration-300 px-0 sm:px-4">
+    <div className="min-h-screen w-full bg-[#f7f7fa] transition-all duration-300" style={{ fontFamily: 'Montserrat, Inter, Hedvig Letters Sans, sans-serif' }}>
+      <div className="ml-0 lg:ml-16 w-auto transition-all duration-300 px-0 sm:px-4">
         <div className="widget-responsive-container w-full px-0 sm:px-4">
           <KaaboWidget
             partnerId="eli-sch-4d67177214b80ea9b91481ca"
@@ -19,7 +14,6 @@ export default function Housing() {
           />
         </div>
       </div>
-      {/* <MobileBottomNav /> */}
     </div>
   );
 }
