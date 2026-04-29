@@ -139,7 +139,7 @@ function JobModal({ job, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
 
         {/* Dark header */}
         <div className="bg-[#1a0841] px-6 pt-6 pb-5">
@@ -175,12 +175,17 @@ function JobModal({ job, onClose }) {
         </div>
 
         {/* Section label */}
-        <div className="px-6 pt-4 pb-2">
+        <div className="px-6 pt-4 pb-1">
           <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Job Board (Visa Sponsored)</p>
         </div>
 
+        {/* Short description */}
+        {job.description && (
+          <p className="px-6 pt-2 pb-1 text-xs text-gray-500 leading-relaxed line-clamp-3">{stripHtml(job.description)}</p>
+        )}
+
         {/* Key rows */}
-        <div className="px-6 flex flex-col gap-2.5 pb-4">
+        <div className="px-6 pt-3 flex flex-col gap-2.5 pb-4">
           {rows.map(r => (
             <div key={r.label} className="flex items-start gap-3">
               <span className="text-base leading-none mt-0.5">{r.icon}</span>

@@ -17,21 +17,30 @@ function formatDeadline(deadline) {
 function ScholarshipModal({ s, onClose }) {
   if (!s) return null;
 
-  const levels       = Array.isArray(s.degree_levels) ? s.degree_levels : [];
-  const countries    = Array.isArray(s.host_countries) ? s.host_countries : [];
-  const nationalities= Array.isArray(s.eligible_nationalities) ? s.eligible_nationalities : [];
-  const tags         = Array.isArray(s.tags) ? s.tags : [];
-  const funding      = s.funding_type || s.amount || null;
-  const isFull       = /full(y|\s*fund)/i.test(funding || "");
-  const applyUrl     = s.source_url || s.url;
-  const initials     = (s.organization || s.title || "?").slice(0, 2).toUpperCase();
+  const levels        = Array.isArray(s.degree_levels) ? s.degree_levels : [];
+  const countries     = Array.isArray(s.host_countries) ? s.host_countries : [];
+  const nationalities = Array.isArray(s.eligible_nationalities) ? s.eligible_nationalities : [];
+  const tags          = Array.isArray(s.tags) ? s.tags : [];
+  const applyUrl      = s.source_url || s.url;
+  const initials      = (s.organization || s.title || "?").slice(0, 2).toUpperCase();
+
+  // Separate amount (price) from funding level (full/partial/other)
+  const rawType = (s.funding_type || "").toLowerCase().trim();
+  const isFull    = /full/i.test(rawType);
+  const isPartial = /partial/i.test(rawType);
+  const fundingLabel = isFull ? "Fully Funded" : isPartial ? "Partial Funding" : rawType ? rawType.charAt(0).toUpperCase() + rawType.slice(1) : null;
+  const badgeGreen = isFull;
+
+  // Only show AMOUNT if it contains an actual monetary value (digits or currency symbols)
+  const monetaryAmount = s.amount && /[\d$£€¥₹]/.test(s.amount) ? String(s.amount).slice(0, 80) : null;
 
   const rows = [
-    funding   && { icon: "💰", label: "VALUE",    value: String(funding).slice(0, 80) },
-    countries.length && { icon: "📍", label: "LOCATION", value: countries.join(", ") },
-    s.deadline && { icon: "📅", label: "DEADLINE", value: formatDeadline(s.deadline) },
-    nationalities.length && { icon: "🌍", label: "ELIGIBLE", value: nationalities.slice(0, 5).join(", ") + (nationalities.length > 5 ? ` +${nationalities.length - 5}` : "") },
-    levels.length && { icon: "🎓", label: "LEVEL",    value: levels.join(", ") },
+    monetaryAmount && { icon: "💷", label: "AMOUNT",    value: monetaryAmount },
+    fundingLabel   && { icon: "🏆", label: "FUNDING",   value: fundingLabel },
+    countries.length && { icon: "📍", label: "LOCATION",  value: countries.join(", ") },
+    s.deadline    && { icon: "📅", label: "DEADLINE",  value: formatDeadline(s.deadline) },
+    nationalities.length && { icon: "🌍", label: "ELIGIBLE",  value: nationalities.slice(0, 5).join(", ") + (nationalities.length > 5 ? ` +${nationalities.length - 5}` : "") },
+    levels.length && { icon: "🎓", label: "LEVEL",     value: levels.join(", ") },
   ].filter(Boolean);
 
   return (
@@ -40,11 +49,11 @@ function ScholarshipModal({ s, onClose }) {
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden"
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden max-h-[90vh] overflow-y-auto"
         onClick={e => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="bg-[#1a0841] px-6 pt-6 pb-5">
+        {/* Dark header */}
+        <div className="bg-[#1a0841] px-6 pt-6 pb-5 flex-shrink-0">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
               <div className="w-11 h-11 rounded-xl bg-white/15 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
@@ -60,21 +69,26 @@ function ScholarshipModal({ s, onClose }) {
             </button>
           </div>
 
-          {/* Funding badge */}
-          {funding && (
-            <div className={`mt-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wide ${isFull ? "bg-green-400 text-green-900" : "bg-purple-400/30 text-purple-100"}`}>
-              💰 {isFull ? "Fully Funded (Full Ride)" : String(funding).slice(0, 50)}
+          {/* Funding level badge */}
+          {fundingLabel && (
+            <div className={`mt-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wide ${badgeGreen ? "bg-green-400 text-green-900" : "bg-yellow-300 text-yellow-900"}`}>
+              🏆 {fundingLabel}
             </div>
           )}
         </div>
 
         {/* Section label */}
-        <div className="px-6 pt-4 pb-2">
+        <div className="px-6 pt-4 pb-1">
           <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Scholarship Finder</p>
         </div>
 
+        {/* Short description */}
+        {s.description && (
+          <p className="px-6 pt-2 pb-1 text-xs text-gray-500 leading-relaxed line-clamp-3">{s.description}</p>
+        )}
+
         {/* Key rows */}
-        <div className="px-6 flex flex-col gap-2.5 pb-4">
+        <div className="px-6 pt-3 flex flex-col gap-2.5 pb-4">
           {rows.map(r => (
             <div key={r.label} className="flex items-start gap-3">
               <span className="text-base leading-none mt-0.5">{r.icon}</span>
