@@ -32,7 +32,7 @@ const EventsPage = lazy(() => import('./pages/EventsPage'));
 const CareersPage = lazy(() => import('./pages/CareersPage'));
 const ControlPanel = lazy(() => import('./pages/ControlPanel'));
 
-// Centralized auth hook with onboarding redirect
+// Centralized auth hook with onboarding redirect 
 function useAuth() {
   console.log('useAuth called', Date.now());
   const [user, setUser] = React.useState(null);
