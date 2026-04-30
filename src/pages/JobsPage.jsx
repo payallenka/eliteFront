@@ -99,11 +99,9 @@ function JobCard({ job, onClick }) {
             <MdWork size={11} /> {job.contract_type.split(",")[0]}
           </span>
         )}
-        {salary && (
-          <span className="inline-flex items-center gap-1 text-xs bg-green-50 text-green-700 rounded-full px-2.5 py-0.5">
-            <MdAttachMoney size={11} /> {salary}
-          </span>
-        )}
+        <span className={`inline-flex items-center gap-1 text-xs rounded-full px-2.5 py-0.5 ${salary ? "bg-green-50 text-green-700" : "bg-gray-50 text-gray-400"}`}>
+          <MdAttachMoney size={11} /> {salary || "Salary not disclosed"}
+        </span>
       </div>
 
       {/* Footer */}
@@ -125,12 +123,12 @@ function JobModal({ job, onClose }) {
   const meta     = SOURCE_META[job.source] || { label: job.source, bg: "bg-gray-50", text: "text-gray-600", dot: "bg-gray-300" };
   const salary   = formatSalary(job.salary_min, job.salary_max, job.currency);
   const initials = (job.company || "?").slice(0, 2).toUpperCase();
-  const isVisaSource = ["uk_sponsor_register", "nhs_jobs", "canada_job_bank"].includes(job.source);
+  const isVisaSource = ["uk_sponsor_register", "nhs_jobs", "canada_job_bank", "arbeitnow"].includes(job.source);
   let tags = [];
   try { tags = JSON.parse(job.tags || "[]"); } catch { tags = []; }
 
   const rows = [
-    salary          && { icon: "💷", label: "SALARY",   value: salary },
+    { icon: "💷", label: "SALARY", value: salary || "Not disclosed" },
     job.location    && { icon: "📍", label: "LOCATION", value: job.location },
     job.contract_type && { icon: "📋", label: "CONTRACT", value: job.contract_type.split(",")[0] },
     isVisaSource    && { icon: "✅", label: "VISA",     value: "Sponsorship / Work Permit Available" },
@@ -176,7 +174,9 @@ function JobModal({ job, onClose }) {
 
         {/* Section label */}
         <div className="px-6 pt-4 pb-1">
-          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Job Board (Visa Sponsored)</p>
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+            {isVisaSource ? "Job Board (Visa Sponsored)" : "Job Board"}
+          </p>
         </div>
 
         {/* Short description */}
@@ -264,6 +264,7 @@ function BrowseTab() {
   const [category, setCategory]   = useState("");
   const [experience, setExp]      = useState("");
   const [last24h, setLast24h]     = useState(false);
+  const [visaOnly, setVisaOnly]   = useState(false);
   const [offset, setOffset]       = useState(0);
   const [selected, setSelected]   = useState(null);
 
@@ -278,12 +279,13 @@ function BrowseTab() {
     setError(null);
     try {
       const params = new URLSearchParams({ limit: LIMIT, offset: reset ? 0 : offset });
-      if (search)         params.set("search",       search);
-      if (sourceFilter)   params.set("source",       sourceFilter);
-      if (locationFilter) params.set("location",     locationFilter);
-      if (category)       params.set("category",     category);
-      if (experience)     params.set("experience",   experience);
-      if (last24h)        params.set("posted_hours", "24");
+      if (search)         params.set("search",          search);
+      if (sourceFilter)   params.set("source",          sourceFilter);
+      if (locationFilter) params.set("location",        locationFilter);
+      if (category)       params.set("category",        category);
+      if (experience)     params.set("experience",      experience);
+      if (last24h)        params.set("posted_hours",    "24");
+      if (visaOnly)       params.set("visa_sponsored",  "true");
       const res = await fetch(`${API}/api/jobs?${params}`);
       if (!res.ok) throw new Error(`Server error: ${res.status}`);
       const data = await res.json();
@@ -295,17 +297,17 @@ function BrowseTab() {
     } finally {
       setLoading(false);
     }
-  }, [search, sourceFilter, locationFilter, category, experience, last24h, offset]);
+  }, [search, sourceFilter, locationFilter, category, experience, last24h, visaOnly, offset]);
 
   useEffect(() => {
     setOffset(0);
     setJobs([]);
     fetchJobs(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, sourceFilter, locationFilter, category, experience, last24h]);
+  }, [search, sourceFilter, locationFilter, category, experience, last24h, visaOnly]);
 
-  const hasFilters = search || sourceFilter || locationFilter || category || experience || last24h;
-  const clearAll = () => { setSearch(""); setSource(""); setLoc(""); setCategory(""); setExp(""); setLast24h(false); };
+  const hasFilters = search || sourceFilter || locationFilter || category || experience || last24h || visaOnly;
+  const clearAll = () => { setSearch(""); setSource(""); setLoc(""); setCategory(""); setExp(""); setLast24h(false); setVisaOnly(false); };
 
   return (
     <div className="flex flex-col gap-4">
@@ -381,6 +383,13 @@ function BrowseTab() {
           className={`px-3 py-2 rounded-xl border text-sm font-semibold transition-all flex items-center gap-1.5 ${last24h ? "bg-purple-600 border-purple-600 text-white" : "border-gray-200 text-gray-600 bg-white hover:border-purple-300"}`}
         >
           🕐 Last 24 hrs
+        </button>
+
+        <button
+          onClick={() => setVisaOnly(v => !v)}
+          className={`px-3 py-2 rounded-xl border text-sm font-semibold transition-all flex items-center gap-1.5 ${visaOnly ? "bg-green-600 border-green-600 text-white" : "border-gray-200 text-gray-600 bg-white hover:border-green-300"}`}
+        >
+          ✈️ Visa Sponsored
         </button>
       </div>
 
