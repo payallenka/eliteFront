@@ -5,6 +5,12 @@ export const useKaaboWidget = (config) => {
   const scriptLoadedRef = useRef(false);
 
   useEffect(() => {
+    function restoreScroll() {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.documentElement.style.overflow = '';
+    }
+
     function initializeWidget() {
       if (window._mw && widgetRef.current) {
         window._mw('init', {
@@ -17,6 +23,18 @@ export const useKaaboWidget = (config) => {
       }
     }
 
+    // Watch for the widget locking body/html overflow on mobile and restore it immediately
+    const observer = new MutationObserver(() => {
+      if (document.body.style.overflow === 'hidden' || document.body.style.position === 'fixed') {
+        restoreScroll();
+      }
+      if (document.documentElement.style.overflow === 'hidden') {
+        document.documentElement.style.overflow = '';
+      }
+    });
+    observer.observe(document.body, { attributes: true, attributeFilter: ['style'] });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['style'] });
+
     if (!scriptLoadedRef.current) {
       const script = document.createElement('script');
       script.id = 'kaabo-widget-script';
@@ -25,6 +43,7 @@ export const useKaaboWidget = (config) => {
       script.onload = () => {
         scriptLoadedRef.current = true;
         initializeWidget();
+        restoreScroll();
       };
       script.onerror = () => {
         console.error('Failed to load Kaabo widget script');
@@ -32,20 +51,19 @@ export const useKaaboWidget = (config) => {
       document.body.appendChild(script);
     } else {
       initializeWidget();
+      restoreScroll();
     }
 
-    // Cleanup on unmount — remove script, clear container, restore body styles the widget may have set
+    // Cleanup on unmount — disconnect observer, remove script, restore body styles
     return () => {
+      observer.disconnect();
       if (widgetRef.current) {
         widgetRef.current.innerHTML = '';
       }
       const existingScript = document.getElementById('kaabo-widget-script');
       if (existingScript) existingScript.remove();
       scriptLoadedRef.current = false;
-      // Restore body/html overflow in case the widget locked them
-      document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.documentElement.style.overflow = '';
+      restoreScroll();
     };
   }, [config]);
 
