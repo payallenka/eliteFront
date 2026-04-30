@@ -243,9 +243,6 @@ function JobSkeleton() {
   );
 }
 
-const CATEGORY_CHIPS = [
-  "Sales", "Nursing", "Accounting", "Construction", "Legal", "Design",
-];
 
 const EXPERIENCE_LEVELS = [
   { value: "",        label: "All Levels" },
@@ -387,18 +384,6 @@ function BrowseTab() {
         </button>
       </div>
 
-      {/* Category quick-select chips */}
-      <div className="flex flex-wrap gap-1.5">
-        {CATEGORY_CHIPS.map(chip => (
-          <button
-            key={chip}
-            onClick={() => setCategory(prev => prev === chip ? "" : chip)}
-            className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all ${category === chip ? "bg-[#1a0841] text-white border-[#1a0841]" : "bg-white text-gray-600 border-gray-200 hover:border-purple-300 hover:text-purple-700"}`}
-          >
-            {chip}
-          </button>
-        ))}
-      </div>
 
       {/* Count */}
       {!loading && !error && (
