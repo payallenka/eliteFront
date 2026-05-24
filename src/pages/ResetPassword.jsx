@@ -10,17 +10,34 @@ function ResetPassword() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Supabase sends the token in the hash fragment, not query string
-    const hash = window.location.hash.substring(1); // remove '#'
-    const params = new URLSearchParams(hash);
-    const type = params.get("type");
-    const accessToken = params.get("access_token");
-    if (type === "recovery" && accessToken) {
-      setCanReset(true);
-      // Supabase automatically authenticates the user with the token
-    } else {
-      setError("Invalid or expired password reset link.");
-    }
+    let mounted = true;
+
+    // supabase-js parses the recovery URL on load and emits PASSWORD_RECOVERY
+    // once the recovery session is established. Listen for it.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (mounted && event === "PASSWORD_RECOVERY") setCanReset(true);
+    });
+
+    // Race fallback: if the event fired before this component subscribed,
+    // a session will already exist. An explicit error from Supabase shows up
+    // in the URL fragment as `error_description`.
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
+      if (session) {
+        setCanReset(true);
+        return;
+      }
+      const params = new URLSearchParams(
+        window.location.hash.substring(1) || window.location.search.substring(1)
+      );
+      const errDesc = params.get("error_description");
+      setError(errDesc ? errDesc.replace(/\+/g, " ") : "Invalid or expired password reset link.");
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const handleResetPassword = async (e) => {
