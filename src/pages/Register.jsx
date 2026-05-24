@@ -73,6 +73,7 @@ function Register() {
   const [step, setStep] = useState(1);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
   const [phoneCountryCode, setPhoneCountryCode] = useState(COUNTRY_CODES[0]?.code || "");
   const [whatsapp, setWhatsapp] = useState("");
@@ -387,37 +388,48 @@ function Register() {
         }
       }
 
-      // Use magic link for all users
-      const { data: userData, error: otpError } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          data: {
-            name,
-            role,
-            phone: phoneCountryCode + phone,
-            whatsapp: whatsappCountryCode + whatsapp,
-            application_data: step === 2 && role === "student" ? {
-              country: finalCountry, 
-              language, 
-              degreeLevel, 
-              gpa, 
-              languageScore, 
-              budget, 
-              schoolingCountry: finalSchoolingCountry, 
-              bachelorCountry: finalBachelorCountry, 
-              masterCountry: finalMasterCountry,
-              documents: documentUrls
-            } : null
-          },
-          shouldCreateUser: true,
-          emailRedirectTo: window.location.origin + "/profile"
-        }
-      });
-      console.log('[DEBUG] Magic link result:', { userData, otpError });
+      const userMetadata = {
+        name,
+        role,
+        phone: phoneCountryCode + phone,
+        whatsapp: whatsappCountryCode + whatsapp,
+        application_data: step === 2 && role === "student" ? {
+          country: finalCountry,
+          language,
+          degreeLevel,
+          gpa,
+          languageScore,
+          budget,
+          schoolingCountry: finalSchoolingCountry,
+          bachelorCountry: finalBachelorCountry,
+          masterCountry: finalMasterCountry,
+          documents: documentUrls
+        } : null
+      };
 
-      if (otpError) {
-        console.log('[DEBUG] Registration failed with error:', otpError.message);
-        setError(otpError.message);
+      const usingPassword = password && password.length >= 6;
+      const { data: userData, error: signupError } = usingPassword
+        ? await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              data: userMetadata,
+              emailRedirectTo: window.location.origin + "/profile"
+            }
+          })
+        : await supabase.auth.signInWithOtp({
+            email,
+            options: {
+              data: userMetadata,
+              shouldCreateUser: true,
+              emailRedirectTo: window.location.origin + "/profile"
+            }
+          });
+      console.log('[DEBUG] Signup result:', { mode: usingPassword ? 'password' : 'magic-link', userData, signupError });
+
+      if (signupError) {
+        console.log('[DEBUG] Registration failed with error:', signupError.message);
+        setError(signupError.message);
       } else {
         console.log('[DEBUG] Registration successful, proceeding with welcome email...');
         // Store onboarding data in localStorage for post-login processing
@@ -458,7 +470,9 @@ function Register() {
           console.error('[DEBUG] Welcome email failed:', emailErr);
         }
 
-        setSuccess("Registration successful! A magic link has been sent to your email. Please check your inbox to complete your registration and access your account!");
+        setSuccess(usingPassword
+          ? "Registration successful! Please check your email to confirm your account, then sign in with your password."
+          : "Registration successful! A magic link has been sent to your email. Please check your inbox to complete your registration and access your account!");
         setTimeout(() => navigate('/login'), 2000);
       }
     } catch (err) {
@@ -483,18 +497,28 @@ function Register() {
       }
       setLoading(true);
       try {
-        console.log("Requesting magic link for email:", email);
-        // Magic link version
-        const { data: userData, error: otpError } = await supabase.auth.signInWithOtp({
-          email,
-          options: {
-            data: { name, role, phone, whatsapp },
-            shouldCreateUser: true,
-            emailRedirectTo: window.location.origin + "/profile"
-          }
-        });
-        if (otpError) {
-          setError(otpError.message);
+        const advisorMetadata = { name, role, phone, whatsapp };
+        const usingPassword = password && password.length >= 6;
+        console.log(`[DEBUG] Advisor signup mode: ${usingPassword ? 'password' : 'magic-link'} for ${email}`);
+        const { data: userData, error: signupError } = usingPassword
+          ? await supabase.auth.signUp({
+              email,
+              password,
+              options: {
+                data: advisorMetadata,
+                emailRedirectTo: window.location.origin + "/profile"
+              }
+            })
+          : await supabase.auth.signInWithOtp({
+              email,
+              options: {
+                data: advisorMetadata,
+                shouldCreateUser: true,
+                emailRedirectTo: window.location.origin + "/profile"
+              }
+            });
+        if (signupError) {
+          setError(signupError.message);
         } else {
           // Send welcome email after successful registration
           try {
@@ -510,7 +534,9 @@ function Register() {
             console.error('[DEBUG] Welcome email failed for advisor:', emailErr);
           }
 
-          setSuccess("A signup link has been sent to your email. Please check your inbox and verify your account.");
+          setSuccess(usingPassword
+            ? "Advisor registration successful! Please check your email to confirm your account, then sign in with your password."
+            : "A signup link has been sent to your email. Please check your inbox and verify your account.");
           setTimeout(() => navigate('/login'), 1500);
         }
       } catch (err) {
@@ -571,6 +597,10 @@ function Register() {
                 <div className="input-group">
                   <label className="input-label" htmlFor="reg-email">Email address</label>
                   <input id="reg-email" type="email" placeholder="you@example.com" required value={email} onChange={e => setEmail(e.target.value)} className="input" />
+                </div>
+                <div className="input-group">
+                  <label className="input-label" htmlFor="reg-password">Password <span className="text-slate-400 font-normal">(optional — leave blank to use magic link)</span></label>
+                  <input id="reg-password" type="password" placeholder="At least 6 characters" value={password} onChange={e => setPassword(e.target.value)} className="input" minLength={6} autoComplete="new-password" />
                 </div>
                 <div className="input-group">
                   <label className="input-label" htmlFor="reg-role">I am a…</label>

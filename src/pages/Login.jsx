@@ -36,9 +36,11 @@ const STATS = [
 function Login() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+  const [magicLoading, setMagicLoading] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -46,11 +48,37 @@ function Login() {
     });
   }, [navigate]);
 
-  const handleLogin = async (e) => {
+  const handlePasswordLogin = async (e) => {
     e.preventDefault();
     setError("");
     setSuccess("");
+    if (!email || !password) {
+      setError("Please enter your email and password.");
+      return;
+    }
     setLoading(true);
+    const { error: pwError } = await supabase.auth.signInWithPassword({ email, password });
+    setLoading(false);
+    if (pwError) {
+      if (pwError.message?.toLowerCase().includes("invalid login credentials")) {
+        setError("Invalid email or password. If you signed up via magic link, click 'Send magic link' or set a password using 'Forgot / set password?'.");
+      } else {
+        setError(pwError.message);
+      }
+    } else {
+      setSuccess("Login successful!");
+      setTimeout(() => navigate("/profile"), 800);
+    }
+  };
+
+  const handleMagicLink = async () => {
+    setError("");
+    setSuccess("");
+    if (!email) {
+      setError("Please enter your email to receive a magic link.");
+      return;
+    }
+    setMagicLoading(true);
     const { error: otpError } = await supabase.auth.signInWithOtp({
       email,
       options: {
@@ -58,7 +86,7 @@ function Login() {
         emailRedirectTo: window.location.origin + "/profile",
       },
     });
-    setLoading(false);
+    setMagicLoading(false);
     if (otpError) setError(otpError.message);
     else setSuccess("Magic link sent! Check your inbox to sign in.");
   };
@@ -147,12 +175,12 @@ function Login() {
                 Welcome back
               </h2>
               <p className="text-slate-500 text-sm">
-                Enter your email and we'll send you a magic login link.
+                Sign in with your password, or request a magic link.
               </p>
             </div>
 
             {/* Form */}
-            <form onSubmit={handleLogin} className="space-y-4">
+            <form onSubmit={handlePasswordLogin} className="space-y-4">
               <div>
                 <label className="input-label" htmlFor="email">Email address</label>
                 <input
@@ -166,21 +194,50 @@ function Login() {
                 />
               </div>
 
+              <div>
+                <label className="input-label" htmlFor="password">Password</label>
+                <input
+                  id="password"
+                  type="password"
+                  placeholder="Your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="input"
+                  autoComplete="current-password"
+                />
+              </div>
+
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || magicLoading}
                 className="btn btn-rose btn-lg w-full mt-2 group"
               >
                 {loading ? (
                   <>
                     <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                    Sending link…
+                    Signing in…
                   </>
                 ) : (
                   <>
-                    Send magic link
+                    Sign in
                     <MdArrowForward size={18} className="group-hover:translate-x-0.5 transition-transform" />
                   </>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={handleMagicLink}
+                disabled={loading || magicLoading}
+                className="btn btn-lg w-full border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+              >
+                {magicLoading ? (
+                  <>
+                    <span className="w-4 h-4 border-2 border-slate-300 border-t-slate-700 rounded-full animate-spin" />
+                    Sending link…
+                  </>
+                ) : (
+                  "Send magic link instead"
                 )}
               </button>
             </form>
@@ -198,6 +255,17 @@ function Login() {
                 {success}
               </div>
             )}
+
+            {/* Forgot / set password */}
+            <p className="text-center text-sm mt-5">
+              <button
+                type="button"
+                onClick={() => navigate("/forgot-password")}
+                className="text-slate-600 hover:text-brand-600 underline font-medium transition-colors"
+              >
+                Forgot / set password?
+              </button>
+            </p>
 
             {/* Divider */}
             <div className="flex items-center gap-3 my-6">

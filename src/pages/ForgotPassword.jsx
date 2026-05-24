@@ -27,7 +27,10 @@ function ForgotPassword() {
     <div className="min-h-screen flex items-center justify-center bg-white text-[#1a0841] font-sans mt-12 px-4 md:px-0">
       <div className="form-section bg-white p-6 md:p-12 rounded-3xl w-full max-w-lg md:max-w-xl shadow-2xl flex flex-col gap-8 border border-[#e6e6e6]">
         <h1 className="text-3xl md:text-4xl font-extrabold mb-2 tracking-tight" style={{ fontFamily: 'Inter, Hedvig Letters Sans, sans-serif' }}>Elite Scholars</h1>
-        <h2 className="mb-6 text-2xl md:text-4xl font-bold leading-tight text-[#1a0841]" style={{ fontFamily: 'Inter, Hedvig Letters Sans, sans-serif' }}>Forgot your password?</h2>
+        <h2 className="mb-2 text-2xl md:text-4xl font-bold leading-tight text-[#1a0841]" style={{ fontFamily: 'Inter, Hedvig Letters Sans, sans-serif' }}>Set or reset password</h2>
+        <p className="text-sm md:text-base text-[#1a0841]/70 mb-4">
+          If you've been signing in with a magic link and want to set a password for the first time, enter your email below. The same link works for resetting a forgotten password.
+        </p>
         <form className="grid grid-cols-1 gap-4 md:gap-6" onSubmit={handleForgotPassword}>
           <input
             type="email"
@@ -41,7 +44,7 @@ function ForgotPassword() {
             type="submit"
             className="bg-[#e60023] hover:bg-[#c2001a] text-white font-bold px-6 md:px-8 py-3 md:py-4 rounded-full w-full mt-2 flex items-center justify-center text-base md:text-lg transition-colors shadow-md"
           >
-            Send Reset Link
+            Send Email Link
           </button>
         </form>
         {error && <div className="mt-4 text-[#e60023] text-center text-base font-semibold">{error}</div>}
