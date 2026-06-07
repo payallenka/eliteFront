@@ -186,7 +186,7 @@ function JobModal({ job, onClose }) {
 
         {/* Short description */}
         {job.description && (
-          <p className="px-6 pt-2 pb-1 text-xs text-gray-500 leading-relaxed line-clamp-3">{stripHtml(job.description)}</p>
+          <p className="px-6 pt-2 pb-1 text-xs text-gray-900 leading-relaxed line-clamp-3">{stripHtml(job.description)}</p>
         )}
 
         {/* Key rows */}
