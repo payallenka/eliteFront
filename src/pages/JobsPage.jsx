@@ -84,7 +84,7 @@ function JobCard({ job, onClick }) {
 
       {/* Description snippet */}
       {job.description && (
-        <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">{stripHtml(job.description)}</p>
+        <p className="text-xs text-gray-900 line-clamp-2 leading-relaxed">{stripHtml(job.description)}</p>
       )}
 
       {/* Badges */}
