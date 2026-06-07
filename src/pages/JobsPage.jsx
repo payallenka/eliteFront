@@ -154,6 +154,15 @@ function JobModal({ job, onClose }) {
   let tags = [];
   try { tags = JSON.parse(job.tags || "[]"); } catch { tags = []; }
   const visaRoute = isSponsorListing ? (tags[0] || null) : null;
+  // Sponsor entries have no posted vacancy — give the user real ways to reach the
+  // employer directly. Companies House always resolves (registered address +
+  // directors for every UK company); LinkedIn/Google are best-effort.
+  const companyQ = encodeURIComponent(job.company || job.title || "");
+  const contactLinks = {
+    companiesHouse: `https://find-and-update.company-information.service.gov.uk/search?q=${companyQ}`,
+    linkedin: `https://www.linkedin.com/search/results/companies/?keywords=${companyQ}`,
+    google: `https://www.google.com/search?q=${encodeURIComponent((job.company || "") + " careers contact")}`,
+  };
 
   const rows = isSponsorListing
     ? [
@@ -246,14 +255,49 @@ function JobModal({ job, onClose }) {
 
         {/* CTA */}
         <div className="px-6 pb-6">
-          <a
-            href={job.apply_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-[#1a0841] text-white font-bold text-sm hover:bg-[#2c1a4e] transition-all"
-          >
-            {isSponsorListing ? "Find roles at this employer" : "Apply Now"} <MdOpenInNew size={15} />
-          </a>
+          {isSponsorListing ? (
+            <div className="flex flex-col gap-2">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pb-0.5">Contact this sponsor</p>
+              <a
+                href={contactLinks.companiesHouse}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-[#1a0841] text-white font-bold text-sm hover:bg-[#2c1a4e] transition-all"
+              >
+                Companies House — address & directors <MdOpenInNew size={15} />
+              </a>
+              <div className="flex gap-2">
+                <a
+                  href={contactLinks.linkedin}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-gray-200 text-[#1a0841] font-semibold text-xs hover:bg-gray-50 transition-all"
+                >
+                  LinkedIn <MdOpenInNew size={13} />
+                </a>
+                <a
+                  href={contactLinks.google}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-gray-200 text-[#1a0841] font-semibold text-xs hover:bg-gray-50 transition-all"
+                >
+                  Web search <MdOpenInNew size={13} />
+                </a>
+              </div>
+              <p className="text-[11px] text-gray-500 leading-relaxed pt-1">
+                This employer is licensed to sponsor work visas but may not have an open vacancy. Reach out directly with your CV, noting you need Skilled Worker sponsorship.
+              </p>
+            </div>
+          ) : (
+            <a
+              href={job.apply_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-[#1a0841] text-white font-bold text-sm hover:bg-[#2c1a4e] transition-all"
+            >
+              Apply Now <MdOpenInNew size={15} />
+            </a>
+          )}
         </div>
       </div>
     </div>
@@ -716,7 +760,7 @@ function MatchTab({ result, loading, error, profile, onRefresh }) {
                   </div>
 
                   {/* Salary + contract */}
-                  {(salary || job.contract_type) && (
+                  {!isSponsorListing && (salary || job.contract_type) && (
                     <div className="flex flex-wrap gap-1">
                       {job.contract_type && (
                         <span className="inline-flex items-center gap-0.5 text-[10px] bg-indigo-50 text-indigo-700 border border-indigo-100 rounded-full px-2 py-0.5">
@@ -737,13 +781,15 @@ function MatchTab({ result, loading, error, profile, onRefresh }) {
                       <span className="text-[10px] text-gray-400">{postedDate(job.posted_at)}</span>
                     )}
                     <a
-                      href={job.apply_url}
+                      href={isSponsorListing
+                        ? `https://find-and-update.company-information.service.gov.uk/search?q=${encodeURIComponent(job.company || job.title || "")}`
+                        : job.apply_url}
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={e => e.stopPropagation()}
                       className="ml-auto inline-flex items-center gap-0.5 text-[10px] font-bold text-purple-600 hover:text-purple-900 bg-purple-50 hover:bg-purple-100 rounded-full px-2.5 py-1 transition-colors"
                     >
-                      Apply <MdOpenInNew size={10} />
+                      {isSponsorListing ? "Contact" : "Apply"} <MdOpenInNew size={10} />
                     </a>
                   </div>
                 </div>
