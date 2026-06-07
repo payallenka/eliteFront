@@ -52,6 +52,15 @@ function JobCard({ job, onClick }) {
   const salary = formatSalary(job.salary_min, job.salary_max, job.currency);
   const initials = (job.company || "?").slice(0, 2).toUpperCase();
 
+  // The UK Sponsor Register lists licensed employers, not vacancies — render
+  // these as sponsor profiles (employer name + the visa route they can sponsor)
+  // rather than fake job postings.
+  const isSponsorListing = job.source === "uk_sponsor_register";
+  let visaRoute = null;
+  if (isSponsorListing) {
+    try { visaRoute = (JSON.parse(job.tags || "[]")[0]) || null; } catch { visaRoute = null; }
+  }
+
   return (
     <div
       className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex flex-col gap-3 hover:shadow-md hover:border-purple-100 transition-all duration-200 cursor-pointer group"
@@ -73,9 +82,11 @@ function JobCard({ job, onClick }) {
         )}
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-[#1a0841] text-sm leading-snug line-clamp-2 group-hover:text-purple-700 transition-colors">
-            {job.title}
+            {isSponsorListing ? (job.company || job.title) : job.title}
           </h3>
-          {job.company && <p className="text-xs text-purple-600 font-medium mt-0.5 truncate">{job.company}</p>}
+          {isSponsorListing
+            ? <p className="text-xs text-green-700 font-medium mt-0.5 truncate">Licensed UK Visa Sponsor</p>
+            : (job.company && <p className="text-xs text-purple-600 font-medium mt-0.5 truncate">{job.company}</p>)}
         </div>
         <span className="shrink-0 text-gray-300 group-hover:text-purple-400 transition-colors mt-0.5">
           <MdOpenInNew size={16} />
@@ -94,14 +105,24 @@ function JobCard({ job, onClick }) {
             <MdLocationOn size={11} /> {job.location}
           </span>
         )}
-        {job.contract_type && (
-          <span className="inline-flex items-center gap-1 text-xs bg-indigo-50 text-indigo-700 rounded-full px-2.5 py-0.5">
-            <MdWork size={11} /> {job.contract_type.split(",")[0]}
-          </span>
+        {isSponsorListing ? (
+          visaRoute && (
+            <span className="inline-flex items-center gap-1 text-xs bg-indigo-50 text-indigo-700 rounded-full px-2.5 py-0.5">
+              <MdWork size={11} /> Sponsors: {visaRoute}
+            </span>
+          )
+        ) : (
+          <>
+            {job.contract_type && (
+              <span className="inline-flex items-center gap-1 text-xs bg-indigo-50 text-indigo-700 rounded-full px-2.5 py-0.5">
+                <MdWork size={11} /> {job.contract_type.split(",")[0]}
+              </span>
+            )}
+            <span className={`inline-flex items-center gap-1 text-xs rounded-full px-2.5 py-0.5 ${salary ? "bg-green-50 text-green-700" : "bg-gray-50 text-gray-400"}`}>
+              <MdAttachMoney size={11} /> {salary || "Salary not disclosed"}
+            </span>
+          </>
         )}
-        <span className={`inline-flex items-center gap-1 text-xs rounded-full px-2.5 py-0.5 ${salary ? "bg-green-50 text-green-700" : "bg-gray-50 text-gray-400"}`}>
-          <MdAttachMoney size={11} /> {salary || "Salary not disclosed"}
-        </span>
         {job.visa_sponsored === true && (
           <span className="inline-flex items-center gap-1 text-xs bg-green-100 text-green-800 font-semibold rounded-full px-2.5 py-0.5">
             ✈️ Visa Sponsored
@@ -129,16 +150,24 @@ function JobModal({ job, onClose }) {
   const salary   = formatSalary(job.salary_min, job.salary_max, job.currency);
   const initials = (job.company || "?").slice(0, 2).toUpperCase();
   const isVisaSource = job.visa_sponsored === true;
+  const isSponsorListing = job.source === "uk_sponsor_register";
   let tags = [];
   try { tags = JSON.parse(job.tags || "[]"); } catch { tags = []; }
+  const visaRoute = isSponsorListing ? (tags[0] || null) : null;
 
-  const rows = [
-    { icon: "💷", label: "SALARY", value: salary || "Not disclosed" },
-    job.location    && { icon: "📍", label: "LOCATION", value: job.location },
-    job.contract_type && { icon: "📋", label: "CONTRACT", value: job.contract_type.split(",")[0] },
-    isVisaSource    && { icon: "✅", label: "VISA",     value: "Sponsorship / Work Permit Available" },
-    job.posted_at   && { icon: "📅", label: "POSTED",   value: postedDate(job.posted_at) },
-  ].filter(Boolean);
+  const rows = isSponsorListing
+    ? [
+        job.location && { icon: "📍", label: "LOCATION", value: job.location },
+        visaRoute    && { icon: "🛂", label: "VISA ROUTE", value: visaRoute },
+        { icon: "✅", label: "STATUS", value: "Licensed to sponsor work visas" },
+      ].filter(Boolean)
+    : [
+        { icon: "💷", label: "SALARY", value: salary || "Not disclosed" },
+        job.location    && { icon: "📍", label: "LOCATION", value: job.location },
+        job.contract_type && { icon: "📋", label: "CONTRACT", value: job.contract_type.split(",")[0] },
+        isVisaSource    && { icon: "✅", label: "VISA",     value: "Sponsorship / Work Permit Available" },
+        job.posted_at   && { icon: "📅", label: "POSTED",   value: postedDate(job.posted_at) },
+      ].filter(Boolean);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
@@ -156,8 +185,12 @@ function JobModal({ job, onClose }) {
                 </div>
               )}
               <div className="min-w-0">
-                <h2 className="font-bold text-white text-sm leading-snug line-clamp-2">{job.title}</h2>
-                {job.company && <p className="text-purple-300 text-xs mt-0.5 truncate">{job.company}</p>}
+                <h2 className="font-bold text-white text-sm leading-snug line-clamp-2">
+                  {isSponsorListing ? (job.company || job.title) : job.title}
+                </h2>
+                {isSponsorListing
+                  ? <p className="text-green-300 text-xs mt-0.5 truncate">Licensed UK Visa Sponsor</p>
+                  : (job.company && <p className="text-purple-300 text-xs mt-0.5 truncate">{job.company}</p>)}
               </div>
             </div>
             <button onClick={onClose} className="shrink-0 p-1 rounded-lg text-white/50 hover:text-white transition-colors mt-0.5">
@@ -180,7 +213,7 @@ function JobModal({ job, onClose }) {
         {/* Section label */}
         <div className="px-6 pt-4 pb-1">
           <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-            {isVisaSource ? "Job Board (Visa Sponsored)" : "Job Board"}
+            {isSponsorListing ? "About this sponsor" : (isVisaSource ? "Job Board (Visa Sponsored)" : "Job Board")}
           </p>
         </div>
 
@@ -219,7 +252,7 @@ function JobModal({ job, onClose }) {
             rel="noopener noreferrer"
             className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-[#1a0841] text-white font-bold text-sm hover:bg-[#2c1a4e] transition-all"
           >
-            Apply Now <MdOpenInNew size={15} />
+            {isSponsorListing ? "Find roles at this employer" : "Apply Now"} <MdOpenInNew size={15} />
           </a>
         </div>
       </div>
@@ -619,6 +652,7 @@ function MatchTab({ result, loading, error, profile, onRefresh }) {
             const salary = formatSalary(job.salary_min, job.salary_max, job.currency);
             const isTop  = i === 0;
             const reason = matchReason(job);
+            const isSponsorListing = job.source === "uk_sponsor_register";
 
             const cardBg = isTop
               ? "bg-gradient-to-br from-white to-violet-50/60 border-2 border-purple-300 shadow-lg shadow-purple-100"
@@ -656,8 +690,12 @@ function MatchTab({ result, loading, error, profile, onRefresh }) {
                       {i + 1}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-bold text-[#1a0841] text-xs leading-snug pr-5 line-clamp-2">{job.title}</h4>
-                      {job.company && <p className="text-[10px] text-purple-600 font-semibold mt-0.5 truncate">{job.company}</p>}
+                      <h4 className="font-bold text-[#1a0841] text-xs leading-snug pr-5 line-clamp-2">
+                        {isSponsorListing ? (job.company || job.title) : job.title}
+                      </h4>
+                      {isSponsorListing
+                        ? <p className="text-[10px] text-green-700 font-semibold mt-0.5 truncate">Licensed UK Visa Sponsor</p>
+                        : (job.company && <p className="text-[10px] text-purple-600 font-semibold mt-0.5 truncate">{job.company}</p>)}
                     </div>
                   </div>
 
