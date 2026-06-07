@@ -102,6 +102,11 @@ function JobCard({ job, onClick }) {
         <span className={`inline-flex items-center gap-1 text-xs rounded-full px-2.5 py-0.5 ${salary ? "bg-green-50 text-green-700" : "bg-gray-50 text-gray-400"}`}>
           <MdAttachMoney size={11} /> {salary || "Salary not disclosed"}
         </span>
+        {job.visa_sponsored === true && (
+          <span className="inline-flex items-center gap-1 text-xs bg-green-100 text-green-800 font-semibold rounded-full px-2.5 py-0.5">
+            ✈️ Visa Sponsored
+          </span>
+        )}
       </div>
 
       {/* Footer */}
@@ -123,7 +128,7 @@ function JobModal({ job, onClose }) {
   const meta     = SOURCE_META[job.source] || { label: job.source, bg: "bg-gray-50", text: "text-gray-600", dot: "bg-gray-300" };
   const salary   = formatSalary(job.salary_min, job.salary_max, job.currency);
   const initials = (job.company || "?").slice(0, 2).toUpperCase();
-  const isVisaSource = ["uk_sponsor_register", "nhs_jobs", "canada_job_bank", "arbeitnow"].includes(job.source);
+  const isVisaSource = job.visa_sponsored === true;
   let tags = [];
   try { tags = JSON.parse(job.tags || "[]"); } catch { tags = []; }
 
@@ -510,7 +515,9 @@ function MatchTab({ result, loading, error, profile, onRefresh }) {
     if (matchedCountry) return `Located in ${matchedCountry}, one of your target countries`;
     if (field && text.includes(field.toLowerCase().split(" ")[0]))
       return `Relevant to your field of interest: ${field}`;
-    return "Visa-sponsored opportunity matching your profile";
+    if (job.visa_sponsored === true)
+      return "Visa-sponsored opportunity matching your profile";
+    return "Opportunity matching your profile";
   }
 
   const profileStats = [
