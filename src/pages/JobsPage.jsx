@@ -132,9 +132,15 @@ function JobCard({ job, onClick }) {
 
       {/* Footer */}
       <div className="flex items-center justify-between pt-1 border-t border-gray-50">
-        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${meta.bg} ${meta.text}`}>
-          {meta.label}
-        </span>
+        {job.visa_sponsored === true ? (
+          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${meta.bg} ${meta.text}`}>
+            {meta.label}
+          </span>
+        ) : (
+          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">
+            Visa Not Applicable
+          </span>
+        )}
         {job.posted_at && (
           <span className="text-[10px] text-gray-400">{postedDate(job.posted_at)}</span>
         )}
@@ -213,8 +219,8 @@ function JobModal({ job, onClose }) {
               ✅ Visa Sponsor Licensed
             </div>
           ) : (
-            <div className={`mt-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wide ${meta.bg} ${meta.text}`}>
-              {meta.label}
+            <div className="mt-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wide bg-white/15 text-white/70">
+              Visa Not Applicable
             </div>
           )}
         </div>
