@@ -8,7 +8,7 @@ const DEGREE_LEVELS = ["", "undergraduate", "masters", "phd", "postgraduate"];
 const CURRENT_LEVELS = ["bachelor", "masters", "phd", "high_school"];
 
 function formatDeadline(deadline) {
-  if (!deadline) return "Open / Not listed";
+  if (!deadline) return "Verify on source";
   return new Date(deadline).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 }
 
