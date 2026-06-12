@@ -10,9 +10,11 @@ const LIMIT = 24;
 
 // ─── Shared helpers ───────────────────────────────────────────────────────────
 
-// Sources hidden from the UI only (still scraped + stored). Arbeitnow is a
-// Germany/EU visa-sponsorship board; we hide its EU roles from the feed.
-const HIDDEN_SOURCES = ["arbeitnow"];
+// Sources hidden from the UI only (still scraped + stored):
+//  - arbeitnow: Germany/EU visa-sponsorship board
+//  - uk_sponsor_register: a directory of licensed employers, not real openings
+//    (real UK vacancies now come from Adzuna)
+const HIDDEN_SOURCES = ["arbeitnow", "uk_sponsor_register"];
 
 const SOURCE_META = {
   remoteok:            { label: "RemoteOK",          bg: "bg-emerald-50", text: "text-emerald-700", dot: "bg-emerald-400" },
