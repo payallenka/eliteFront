@@ -10,6 +10,10 @@ const LIMIT = 24;
 
 // ─── Shared helpers ───────────────────────────────────────────────────────────
 
+// Sources hidden from the UI only (still scraped + stored). Arbeitnow is a
+// Germany/EU visa-sponsorship board; we hide its EU roles from the feed.
+const HIDDEN_SOURCES = ["arbeitnow"];
+
 const SOURCE_META = {
   remoteok:            { label: "RemoteOK",          bg: "bg-emerald-50", text: "text-emerald-700", dot: "bg-emerald-400" },
   arbeitnow:           { label: "Arbeitnow",         bg: "bg-blue-50",   text: "text-blue-700",    dot: "bg-blue-400" },
@@ -378,8 +382,9 @@ function BrowseTab() {
       const res = await fetch(`${API}/api/jobs?${params}`);
       if (!res.ok) throw new Error(`Server error: ${res.status}`);
       const data = await res.json();
+      const items = (data.items || []).filter(j => !HIDDEN_SOURCES.includes(j.source));
       setTotal(data.total);
-      setJobs(prev => reset ? data.items : [...prev, ...data.items]);
+      setJobs(prev => reset ? items : [...prev, ...items]);
       if (!reset) setOffset(o => o + LIMIT);
     } catch (e) {
       setError(e.message);
@@ -422,7 +427,7 @@ function BrowseTab() {
             className="pl-8 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 bg-white appearance-none cursor-pointer"
           >
             <option value="">All Sources</option>
-            {sourcesStatus.map(s => {
+            {sourcesStatus.filter(s => !HIDDEN_SOURCES.includes(s.source)).map(s => {
               const label = SOURCE_META[s.source]?.label || s.source;
               return <option key={s.source} value={s.source}>{label}</option>;
             })}
@@ -570,7 +575,7 @@ function MatchTab({ result, loading, error, profile, onRefresh }) {
 
   if (!result) return null;
 
-  const suggestions   = result.suggestions || [];
+  const suggestions   = (result.suggestions || []).filter(j => !HIDDEN_SOURCES.includes(j.source));
   const prof          = result.profile || profile || {};
   const countries     = Array.isArray(prof.countries) ? prof.countries : [];
   const field         = prof.field || "";
@@ -901,7 +906,8 @@ export default function JobsPage() {
 
         if (cancelled) return;
 
-        const result = { suggestions: data.suggestions || [], profile: profileData };
+        const suggestions = (data.suggestions || []).filter(j => !HIDDEN_SOURCES.includes(j.source));
+        const result = { suggestions, profile: profileData };
         try { localStorage.setItem("jobs_match", JSON.stringify({ result, profile: profileData })); } catch {}
 
         setMatchProfile(profileData);
