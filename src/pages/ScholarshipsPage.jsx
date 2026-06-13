@@ -259,7 +259,7 @@ function BrowseTab() {
   const [degreeLevel, setDegreeLevel] = useState("");
   const [hostCountry, setHostCountry] = useState("");
   const [africanOnly, setAfricanOnly] = useState(false);
-  const [offset, setOffset] = useState(0);
+  const offsetRef = useRef(0);
   const [selected, setSelected] = useState(null);
   const [stats, setStats] = useState(null);
   const LIMIT = 24;
@@ -275,7 +275,8 @@ function BrowseTab() {
     setLoading(true);
     setError(null);
     try {
-      const params = new URLSearchParams({ limit: LIMIT, offset: reset ? 0 : offset, order: "desc" });
+      const off = reset ? 0 : offsetRef.current;
+      const params = new URLSearchParams({ limit: LIMIT, offset: off, order: "desc" });
       if (search) params.set("search", search);
       if (degreeLevel) params.set("degree_level", degreeLevel);
       if (hostCountry) params.set("host_country", hostCountry);
@@ -287,27 +288,28 @@ function BrowseTab() {
       if (!res.ok) throw new Error(`Server error: ${res.status}`);
       const data = await res.json();
 
+      offsetRef.current = off + LIMIT;
       setTotal(data.total);
-      setScholarships(prev => reset ? data.items : [...prev, ...data.items]);
-      if (!reset) setOffset(o => o + LIMIT);
+      setScholarships(prev => {
+        const merged = reset ? data.items : [...prev, ...data.items];
+        const seen = new Set();
+        return merged.filter(s => (seen.has(s.id) ? false : seen.add(s.id)));
+      });
     } catch (e) {
       setError(e.message);
     } finally {
       setLoading(false);
     }
-  }, [search, degreeLevel, hostCountry, africanOnly, offset]);
+  }, [search, degreeLevel, hostCountry, africanOnly]);
 
   useEffect(() => {
-    setOffset(0);
+    offsetRef.current = 0;
     setScholarships([]);
     fetchScholarships(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, degreeLevel, hostCountry, africanOnly]);
 
-  const handleLoadMore = () => {
-    setOffset(scholarships.length);
-    fetchScholarships(false);
-  };
+  const handleLoadMore = () => fetchScholarships(false);
 
   return (
     <div className="flex flex-col gap-4">

@@ -360,7 +360,7 @@ function BrowseTab() {
   const [experience, setExp]      = useState("");
   const [last24h, setLast24h]     = useState(false);
   const [visaOnly, setVisaOnly]   = useState(false);
-  const [offset, setOffset]       = useState(0);
+  const offsetRef                 = useRef(0);
   const [selected, setSelected]   = useState(null);
 
   const [sourcesStatus, setSourcesStatus] = useState([]);
@@ -373,7 +373,8 @@ function BrowseTab() {
     setLoading(true);
     setError(null);
     try {
-      const params = new URLSearchParams({ limit: LIMIT, offset: reset ? 0 : offset });
+      const off = reset ? 0 : offsetRef.current;
+      const params = new URLSearchParams({ limit: LIMIT, offset: off });
       if (search)         params.set("search",          search);
       if (sourceFilter)   params.set("source",          sourceFilter);
       if (locationFilter) params.set("location",        locationFilter);
@@ -385,6 +386,7 @@ function BrowseTab() {
       if (!res.ok) throw new Error(`Server error: ${res.status}`);
       const data = await res.json();
       const items = (data.items || []).filter(j => !HIDDEN_SOURCES.includes(j.source));
+      offsetRef.current = off + LIMIT;   // advance the API offset by one page
       setTotal(data.total);
       // Dedupe by id when appending — offset pages can overlap (many jobs share
       // the same posted_at), which would otherwise repeat the same card.
@@ -393,16 +395,15 @@ function BrowseTab() {
         const seen = new Set();
         return merged.filter(j => (seen.has(j.id) ? false : seen.add(j.id)));
       });
-      if (!reset) setOffset(o => o + LIMIT);
     } catch (e) {
       setError(e.message);
     } finally {
       setLoading(false);
     }
-  }, [search, sourceFilter, locationFilter, category, experience, last24h, visaOnly, offset]);
+  }, [search, sourceFilter, locationFilter, category, experience, last24h, visaOnly]);
 
   useEffect(() => {
-    setOffset(0);
+    offsetRef.current = 0;
     setJobs([]);
     fetchJobs(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -527,7 +528,7 @@ function BrowseTab() {
       {!loading && jobs.length < total && (
         <div className="flex justify-center pt-2">
           <button
-            onClick={() => { setOffset(jobs.length); fetchJobs(false); }}
+            onClick={() => fetchJobs(false)}
             className="px-6 py-2.5 rounded-xl bg-[#1a0841] text-white text-sm font-semibold hover:bg-[#2c1a4e] transition-colors"
           >
             Load more
