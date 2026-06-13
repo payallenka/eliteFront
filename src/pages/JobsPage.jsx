@@ -380,7 +380,7 @@ function BrowseTab() {
       if (locationFilter) params.set("location",        locationFilter);
       if (category)       params.set("category",        category);
       if (experience)     params.set("experience",      experience);
-      if (last24h)        params.set("posted_hours",    "24");
+      if (last24h)        params.set("posted_hours",    "168");  // last 7 days
       if (visaOnly)       params.set("visa_sponsored",  "true");
       const res = await fetch(`${API}/api/jobs?${params}`);
       if (!res.ok) throw new Error(`Server error: ${res.status}`);
@@ -485,7 +485,7 @@ function BrowseTab() {
           onClick={() => setLast24h(v => !v)}
           className={`px-3 py-2 rounded-xl border text-sm font-semibold transition-all flex items-center gap-1.5 ${last24h ? "bg-purple-600 border-purple-600 text-white" : "border-gray-200 text-gray-600 bg-white hover:border-purple-300"}`}
         >
-          🕐 Last 24 hrs
+          🕐 Last 7 days
         </button>
 
         <button
