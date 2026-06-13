@@ -12,6 +12,27 @@ function formatDeadline(deadline) {
   return new Date(deadline).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 }
 
+// Status chip for a scholarship's deadline: red "Deadline over" when the
+// deadline has passed, red "Closed" when explicitly closed, the date (with a
+// "Nd left" / urgency colour) when upcoming, else a neutral "Verify on source".
+function deadlineTag(s) {
+  const today = new Date();
+  const todayStr = today.toISOString().slice(0, 10);
+  if (s.deadline && s.deadline < todayStr)
+    return { label: "Deadline over", cls: "bg-red-100 text-red-700 font-semibold" };
+  if (s.is_open === false || s.is_open === 0)
+    return { label: "Closed", cls: "bg-red-100 text-red-700 font-semibold" };
+  if (s.deadline) {
+    const daysLeft = Math.ceil((new Date(s.deadline) - today) / 86400000);
+    const label = daysLeft < 60 ? `${daysLeft}d left` : formatDeadline(s.deadline);
+    const cls = daysLeft < 30 ? "bg-red-50 text-red-600 font-bold"
+      : daysLeft < 90 ? "bg-amber-50 text-amber-700"
+      : "bg-indigo-50 text-indigo-700";
+    return { label, cls };
+  }
+  return { label: "Verify on source", cls: "bg-gray-100 text-gray-500" };
+}
+
 
 // ─── Detail Modal ─────────────────────────────────────────────────────────────
 function ScholarshipModal({ s, onClose }) {
@@ -139,7 +160,7 @@ function ScholarshipCard({ s, onClick }) {
   const levels = Array.isArray(s.degree_levels)
     ? s.degree_levels.join(", ")
     : s.degree_levels || "Any";
-  const deadline = formatDeadline(s.deadline);
+  const dtag = deadlineTag(s);
   const amount = s.amount || s.funding_type || null;
 
   return (
@@ -165,8 +186,8 @@ function ScholarshipCard({ s, onClick }) {
         <span className="inline-flex items-center gap-1 text-xs bg-purple-50 text-purple-700 rounded-full px-2.5 py-0.5">
           <MdSchool size={12} /> {levels}
         </span>
-        <span className="inline-flex items-center gap-1 text-xs bg-indigo-50 text-indigo-700 rounded-full px-2.5 py-0.5">
-          <MdCalendarToday size={12} /> {deadline}
+        <span className={`inline-flex items-center gap-1 text-xs rounded-full px-2.5 py-0.5 ${dtag.cls}`}>
+          <MdCalendarToday size={12} /> {dtag.label}
         </span>
         {amount && (
           <span className="inline-flex items-center gap-1 text-xs bg-green-50 text-green-700 rounded-full px-2.5 py-0.5">
@@ -486,11 +507,7 @@ function MatchTab({ result, loading, error, profileName, onRefresh }) {
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4">
         {(result?.matches || []).map((match, i) => {
           const s = match.scholarship || {};
-          const deadline = formatDeadline(s.deadline);
-          const daysLeft = s.deadline ? Math.ceil((new Date(s.deadline) - new Date()) / (24 * 3600 * 1000)) : null;
-          const isUrgent = daysLeft !== null && daysLeft < 60;
-          const isSoon = daysLeft !== null && daysLeft < 90;
-          const deadlineCls = !s.deadline ? "text-gray-400 bg-gray-50" : isUrgent ? "text-red-600 bg-red-50 font-bold" : isSoon ? "text-amber-700 bg-amber-50" : "text-indigo-700 bg-indigo-50";
+          const dtag = deadlineTag(s);
           const levels = Array.isArray(s.degree_levels) ? s.degree_levels.join(", ") : s.degree_levels || "Any";
           const hostCountries = Array.isArray(s.host_countries) ? s.host_countries : [];
           const coverage = match.funding_coverage;
@@ -579,8 +596,8 @@ function MatchTab({ result, loading, error, profileName, onRefresh }) {
                   <span className="inline-flex items-center gap-0.5 text-[10px] bg-purple-50 text-purple-700 rounded-full px-2 py-0.5">
                     <MdSchool size={9} /> {levels}
                   </span>
-                  <span className={`inline-flex items-center gap-0.5 text-[10px] rounded-full px-2 py-0.5 ${deadlineCls}`}>
-                    <MdCalendarToday size={9} /> {daysLeft !== null && daysLeft < 60 ? `${daysLeft}d left` : deadline}
+                  <span className={`inline-flex items-center gap-0.5 text-[10px] rounded-full px-2 py-0.5 ${dtag.cls}`}>
+                    <MdCalendarToday size={9} /> {dtag.label}
                   </span>
                   <a
                     href={s.source_url}
