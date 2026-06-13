@@ -155,22 +155,70 @@ function ScholarshipModal({ s, onClose }) {
   );
 }
 
+// Top-of-card deadline pill: "Deadline in N days" / "Deadline over" / "unknown".
+function deadlinePill(s) {
+  const today = new Date();
+  const todayStr = today.toISOString().slice(0, 10);
+  if (s.deadline && s.deadline < todayStr) return { label: "Deadline over", cls: "bg-red-100 text-red-700" };
+  if (s.deadline) {
+    const days = Math.ceil((new Date(s.deadline) - today) / 86400000);
+    if (days <= 0) return { label: "Closing today", cls: "bg-red-100 text-red-700" };
+    return {
+      label: `Deadline in ${days} day${days === 1 ? "" : "s"}`,
+      cls: days <= 14 ? "bg-red-50 text-red-600" : "bg-emerald-50 text-emerald-700",
+    };
+  }
+  return { label: "Deadline unknown", cls: "bg-gray-100 text-gray-500" };
+}
+
+// Small status pills: degree level · funding · open/closed.
+function statusPills(s) {
+  const today = new Date().toISOString().slice(0, 10);
+  const out = [];
+  const lvls = (Array.isArray(s.degree_levels) ? s.degree_levels : []).filter(x => x && x !== "any");
+  if (lvls.length) out.push({ t: lvls.join("/"), tone: "neutral" });
+  if (s.funding_type === "full") out.push({ t: "full", tone: "neutral" });
+  else if (s.funding_type === "partial") out.push({ t: "partial", tone: "neutral" });
+  const closed = s.is_open === false || s.is_open === 0 || (s.deadline && s.deadline < today);
+  out.push({ t: closed ? "closed" : "open", tone: closed ? "closed" : "open" });
+  return out;
+}
+
 // ─── Scholarship Card ────────────────────────────────────────────────────────
 function ScholarshipCard({ s, onClick }) {
-  const levels = Array.isArray(s.degree_levels)
-    ? s.degree_levels.join(", ")
-    : s.degree_levels || "Any";
-  const dtag = deadlineTag(s);
-  const amount = s.amount || s.funding_type || null;
+  const dpill = deadlinePill(s);
+  const pills = statusPills(s);
+  const amount = s.amount || null;
 
   return (
     <div
-      className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex flex-col gap-3 hover:shadow-md hover:border-purple-100 transition-all duration-200 cursor-pointer group"
+      className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex flex-col gap-2.5 hover:shadow-md hover:border-purple-100 transition-all duration-200 cursor-pointer group"
       onClick={onClick}
     >
+      {/* Deadline pill */}
+      <span className={`self-start inline-flex items-center gap-1 text-[11px] font-semibold rounded-full px-2.5 py-1 ${dpill.cls}`}>
+        <MdCalendarToday size={11} /> {dpill.label}
+      </span>
+
+      {/* Status pills */}
+      <div className="flex flex-wrap gap-1.5">
+        {pills.map((p, i) => (
+          <span
+            key={i}
+            className={`text-[11px] font-medium rounded-full px-2 py-0.5 ${
+              p.tone === "open" ? "bg-emerald-100 text-emerald-700"
+              : p.tone === "closed" ? "bg-red-50 text-red-500"
+              : "bg-emerald-50 text-emerald-600"}`}
+          >
+            {p.t}
+          </span>
+        ))}
+      </div>
+
+      {/* Title + org */}
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-[#1a0841] text-sm leading-snug line-clamp-2 group-hover:text-purple-700 transition-colors">{s.title}</h3>
+          <h3 className="font-bold text-[#1a0841] text-sm leading-snug line-clamp-2 group-hover:text-purple-700 transition-colors">{s.title}</h3>
           {s.organization && <p className="text-xs text-purple-600 mt-0.5 font-medium truncate">{s.organization}</p>}
         </div>
         <span className="shrink-0 text-gray-300 group-hover:text-purple-400 transition-colors mt-0.5">
@@ -178,25 +226,20 @@ function ScholarshipCard({ s, onClick }) {
         </span>
       </div>
 
+      {/* Description */}
       {s.description && (
         <p className="text-xs text-gray-500 line-clamp-3 leading-relaxed">{s.description}</p>
       )}
 
-      <div className="flex flex-wrap gap-1.5 mt-auto">
-        <span className="inline-flex items-center gap-1 text-xs bg-purple-50 text-purple-700 rounded-full px-2.5 py-0.5">
-          <MdSchool size={12} /> {levels}
-        </span>
-        <span className={`inline-flex items-center gap-1 text-xs rounded-full px-2.5 py-0.5 ${dtag.cls}`}>
-          <MdCalendarToday size={12} /> {dtag.label}
-        </span>
-        {amount && (
-          <span className="inline-flex items-center gap-1 text-xs bg-green-50 text-green-700 rounded-full px-2.5 py-0.5">
-            <MdAttachMoney size={12} /> {String(amount).slice(0, 40)}
-          </span>
-        )}
-      </div>
+      {/* Amount */}
+      {amount && (
+        <p className="text-xs font-semibold text-green-700 flex items-center gap-1 mt-auto">
+          <MdAttachMoney size={13} /> {String(amount).slice(0, 50)}
+        </p>
+      )}
 
-      <div className="flex items-center justify-between pt-1 border-t border-gray-50">
+      {/* Footer */}
+      <div className="flex items-center justify-between pt-1.5 border-t border-gray-50">
         <span className="text-[10px] text-gray-400 uppercase tracking-wide">{s.source_site}</span>
         {Array.isArray(s.host_countries) && s.host_countries.length > 0 && (
           <span className="text-[10px] text-gray-400">{s.host_countries.slice(0, 2).join(", ")}</span>
