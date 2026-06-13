@@ -386,7 +386,13 @@ function BrowseTab() {
       const data = await res.json();
       const items = (data.items || []).filter(j => !HIDDEN_SOURCES.includes(j.source));
       setTotal(data.total);
-      setJobs(prev => reset ? items : [...prev, ...items]);
+      // Dedupe by id when appending — offset pages can overlap (many jobs share
+      // the same posted_at), which would otherwise repeat the same card.
+      setJobs(prev => {
+        const merged = reset ? items : [...prev, ...items];
+        const seen = new Set();
+        return merged.filter(j => (seen.has(j.id) ? false : seen.add(j.id)));
+      });
       if (!reset) setOffset(o => o + LIMIT);
     } catch (e) {
       setError(e.message);
