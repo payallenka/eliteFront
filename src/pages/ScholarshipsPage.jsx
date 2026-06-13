@@ -258,19 +258,13 @@ function BrowseTab() {
   const [search, setSearch] = useState("");
   const [degreeLevel, setDegreeLevel] = useState("");
   const [hostCountry, setHostCountry] = useState("");
-  const [sourceSite, setSourceSite] = useState("");
   const [africanOnly, setAfricanOnly] = useState(false);
-  const [sites, setSites] = useState([]);
   const [offset, setOffset] = useState(0);
   const [selected, setSelected] = useState(null);
   const [stats, setStats] = useState(null);
   const LIMIT = 24;
 
   useEffect(() => {
-    fetch(`${API}/api/sites`, { headers: { "ngrok-skip-browser-warning": "true" } })
-      .then(r => r.json())
-      .then(data => setSites(Array.isArray(data) ? data : []))
-      .catch(() => {});
     fetch(`${API}/api/stats`, { headers: { "ngrok-skip-browser-warning": "true" } })
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d) setStats(d); })
@@ -285,7 +279,6 @@ function BrowseTab() {
       if (search) params.set("search", search);
       if (degreeLevel) params.set("degree_level", degreeLevel);
       if (hostCountry) params.set("host_country", hostCountry);
-      if (sourceSite) params.set("source_site", sourceSite);
       if (africanOnly) params.set("eligible_nationality", "African");
 
       const res = await fetch(`${API}/api/scholarships?${params}`, {
@@ -302,14 +295,14 @@ function BrowseTab() {
     } finally {
       setLoading(false);
     }
-  }, [search, degreeLevel, hostCountry, sourceSite, africanOnly, offset]);
+  }, [search, degreeLevel, hostCountry, africanOnly, offset]);
 
   useEffect(() => {
     setOffset(0);
     setScholarships([]);
     fetchScholarships(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, degreeLevel, hostCountry, sourceSite, africanOnly]);
+  }, [search, degreeLevel, hostCountry, africanOnly]);
 
   const handleLoadMore = () => {
     setOffset(scholarships.length);
@@ -350,16 +343,6 @@ function BrowseTab() {
           onChange={e => setHostCountry(e.target.value)}
           className="px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 bg-white w-full sm:w-40"
         />
-        <select
-          value={sourceSite}
-          onChange={e => setSourceSite(e.target.value)}
-          className="px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 bg-white appearance-none cursor-pointer w-full sm:w-auto"
-        >
-          <option value="">All Sources</option>
-          {sites.map(s => (
-            <option key={s.name} value={s.name.toLowerCase()}>{s.name} ({s.count.toLocaleString()})</option>
-          ))}
-        </select>
       </div>
 
       {/* Quick filter chips */}
