@@ -220,12 +220,17 @@ function BrowseTab() {
   const [sites, setSites] = useState([]);
   const [offset, setOffset] = useState(0);
   const [selected, setSelected] = useState(null);
+  const [stats, setStats] = useState(null);
   const LIMIT = 24;
 
   useEffect(() => {
     fetch(`${API}/api/sites`, { headers: { "ngrok-skip-browser-warning": "true" } })
       .then(r => r.json())
       .then(data => setSites(Array.isArray(data) ? data : []))
+      .catch(() => {});
+    fetch(`${API}/api/stats`, { headers: { "ngrok-skip-browser-warning": "true" } })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d) setStats(d); })
       .catch(() => {});
   }, []);
 
@@ -323,6 +328,22 @@ function BrowseTab() {
           For Africans
         </button>
       </div>
+
+      {/* Headline metrics */}
+      {stats && (
+        <div className="flex flex-wrap gap-3">
+          {[
+            { label: "Indexed", value: stats.indexed ?? stats.total, cls: "text-[#1a0841]" },
+            { label: "Open", value: stats.open, cls: "text-emerald-600" },
+            { label: "Closing in 7 days", value: stats.closing_soon, cls: "text-red-600" },
+          ].map(m => (
+            <div key={m.label} className="flex-1 min-w-[120px] bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3">
+              <div className={`text-2xl font-bold ${m.cls}`}>{(m.value ?? 0).toLocaleString()}</div>
+              <div className="text-xs text-gray-400 mt-0.5">{m.label}</div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Count */}
       {!loading && !error && (
