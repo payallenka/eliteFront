@@ -20,6 +20,7 @@ const SOURCE_META = {
   remoteok:            { label: "RemoteOK",          bg: "bg-emerald-50", text: "text-emerald-700", dot: "bg-emerald-400" },
   arbeitnow:           { label: "Arbeitnow",         bg: "bg-blue-50",   text: "text-blue-700",    dot: "bg-blue-400" },
   adzuna:              { label: "Adzuna (UK)",       bg: "bg-rose-50",   text: "text-rose-700",    dot: "bg-rose-400" },
+  visasponsor:         { label: "VisaSponsor.jobs",  bg: "bg-teal-50",   text: "text-teal-700",    dot: "bg-teal-400" },
   uk_sponsor_register: { label: "UK Sponsor",        bg: "bg-purple-50", text: "text-purple-700",  dot: "bg-purple-400" },
   canada_job_bank:     { label: "Canada Job Bank",   bg: "bg-red-50",    text: "text-red-700",     dot: "bg-red-400" },
   nhs_jobs:            { label: "NHS Jobs",          bg: "bg-sky-50",    text: "text-sky-700",     dot: "bg-sky-400" },
